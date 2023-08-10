@@ -243,27 +243,80 @@ export const transformInstillSchemaToZod = ({
   targetSchema: InstillJsonSchema | JSONSchema7;
   propertyKey?: string;
 }): instillZodSchema => {
-  // we don't have oneOf field right now so we don't do additional step for it
+  // we don't have oneOf field right now
 
   let instillZodSchema: instillZodSchema = z.any();
 
-  if (targetSchema.enum) {
-    const enumValues = targetSchema.enum as string[];
-    const firstValues = enumValues.pop();
+  // Handle the anyOf fields
 
-    if (firstValues) {
-      instillZodSchema = z.enum([firstValues, ...enumValues]);
-      const isRequired =
-        propertyKey &&
-        Array.isArray(parentSchema.required) &&
-        parentSchema.required.includes(propertyKey);
+  if (targetSchema.anyOf && targetSchema.anyOf.length > 0) {
+    const anyOfConditions = targetSchema.anyOf;
+    const anyOfSchemaArray: z.ZodTypeAny[] = [];
 
-      if (!isRequired) {
-        instillZodSchema = instillZodSchema.optional();
+    for (const condition of anyOfConditions) {
+      if (typeof condition !== "boolean") {
+        const anyOfSchema = transformInstillSchemaToZod({
+          parentSchema,
+          targetSchema: condition,
+        });
+        anyOfSchemaArray.push(anyOfSchema);
       }
-      return instillZodSchema;
     }
+
+    // Just like what we did for the enum, we also need to do the casting here
+    instillZodSchema = z.union(
+      anyOfSchemaArray as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]
+    );
+
+    const isRequired =
+      propertyKey &&
+      Array.isArray(parentSchema.required) &&
+      parentSchema.required.includes(propertyKey);
+
+    if (!isRequired) {
+      instillZodSchema = instillZodSchema.optional();
+    }
+
+    return instillZodSchema;
   }
+
+  // Handle the enum fields
+
+  if (targetSchema.enum) {
+    // We need to do the castring here to make typescript happy.
+    // The reason is typescript need to know the amount of the element
+    // in the enum, but the enum is dynamic right here, so the ts will
+    // complaint about it.
+    // ref: https://github.com/colinhacks/zod/issues/2376
+
+    const enumValues = targetSchema.enum as [string, ...string[]];
+    instillZodSchema = z.enum(enumValues);
+
+    const isRequired =
+      propertyKey &&
+      Array.isArray(parentSchema.required) &&
+      parentSchema.required.includes(propertyKey);
+
+    if (!isRequired) {
+      instillZodSchema = instillZodSchema.optional();
+    }
+
+    return instillZodSchema;
+  }
+
+  // We will use discriminatedUnion to handle allOf
+  // ref: https://github.com/colinhacks/zod/discussions/2099
+
+  // if (targetSchema.allOf && targetSchema.allOf.length > 0) {
+  //   const allConditions = targetSchema.allOf as InstillJsonSchema[];
+
+  //   const conditionFields = allConditions.map((condition) => {
+  //     const ifProperties = Object.entries(condition.if?.properties || {});
+  //     return ifProperties[0][0];
+  //   });
+  // }
+
+  // Handle the normal type of the json schema
 
   switch (targetSchema.type) {
     case "array": {

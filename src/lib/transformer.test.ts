@@ -51,7 +51,7 @@ test("should transform basic json schema to zod schema", () => {
   });
 });
 
-test("should recognize optional field", () => {
+test("should transform optional field", () => {
   const schema: InstillJsonSchema = {
     type: "object",
     required: ["host"],
@@ -91,7 +91,7 @@ test("should recognize optional field", () => {
   expect(parsedWrongObj.success).toBe(false);
 });
 
-test("should recognize enum fields", () => {
+test("should transform enum fields", () => {
   const schema: InstillJsonSchema = {
     type: "object",
     required: ["host"],
@@ -128,6 +128,53 @@ test("should recognize enum fields", () => {
 
   const wrongObj = {
     task: "TASK_UNSPECIFIED",
+  };
+
+  const parsedWrongObj = zodSchema.safeParse(wrongObj);
+
+  expect(parsedWrongObj.success).toBe(false);
+});
+
+test("should transform anyOf fields", () => {
+  const schema: InstillJsonSchema = {
+    type: "object",
+    required: ["host"],
+    properties: {
+      model: {
+        description:
+          "ID of the model to use. Only `whisper-1` is currently available.\n",
+        anyOf: [
+          {
+            type: "string",
+          },
+          {
+            type: "string",
+            enum: ["whisper-1"],
+          },
+        ],
+        type: "string",
+      },
+    },
+  };
+
+  const testedObj = {
+    model: "whisper-1",
+  };
+
+  const zodSchema = transformInstillSchemaToZod({
+    parentSchema: schema,
+    targetSchema: schema,
+  });
+
+  const parsedObj = zodSchema.safeParse(testedObj);
+
+  expect(parsedObj).toStrictEqual({
+    success: true,
+    data: { model: "whisper-1" },
+  });
+
+  const wrongObj = {
+    model: 123,
   };
 
   const parsedWrongObj = zodSchema.safeParse(wrongObj);
