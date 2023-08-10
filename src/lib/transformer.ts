@@ -1,6 +1,4 @@
-import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { JSONSchema7, JSONSchema7Definition } from "json-schema";
 
 type InstillJsonSchemaProps = {
@@ -13,6 +11,8 @@ type InstillJsonSchemaProps = {
 export type InstillJsonSchema = {
   [Property in keyof JSONSchema7]+?: JSONSchema7[Property] extends boolean
     ? boolean
+    : Property extends "enum"
+    ? string[]
     : Property extends "if" | "then"
     ? InstillJsonSchema
     : Property extends "allOf"
@@ -246,6 +246,24 @@ export const transformInstillSchemaToZod = ({
   // we don't have oneOf field right now so we don't do additional step for it
 
   let instillZodSchema: instillZodSchema = z.any();
+
+  if (targetSchema.enum) {
+    const enumValues = targetSchema.enum as string[];
+    const firstValues = enumValues.pop();
+
+    if (firstValues) {
+      instillZodSchema = z.enum([firstValues, ...enumValues]);
+      const isRequired =
+        propertyKey &&
+        Array.isArray(parentSchema.required) &&
+        parentSchema.required.includes(propertyKey);
+
+      if (!isRequired) {
+        instillZodSchema = instillZodSchema.optional();
+      }
+      return instillZodSchema;
+    }
+  }
 
   switch (targetSchema.type) {
     case "array": {

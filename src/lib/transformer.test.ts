@@ -91,4 +91,46 @@ test("should recognize optional field", () => {
   expect(parsedWrongObj.success).toBe(false);
 });
 
-test("should recognize nested fields", () => {});
+test("should recognize enum fields", () => {
+  const schema: InstillJsonSchema = {
+    type: "object",
+    required: ["host"],
+    properties: {
+      task: {
+        title: "Task",
+        enum: [
+          "TASK_TEXT_GENERATION",
+          "TASK_TEXT_EMBEDDINGS",
+          "TASK_SPEECH_RECOGNITION",
+        ],
+        default: "TASK_TEXT_GENERATION",
+      },
+    },
+  };
+
+  const testedObj = {
+    task: "TASK_TEXT_GENERATION",
+  };
+
+  const zodSchema = transformInstillSchemaToZod({
+    parentSchema: schema,
+    targetSchema: schema,
+  });
+
+  const parsedObj = zodSchema.safeParse(testedObj);
+
+  expect(parsedObj).toStrictEqual({
+    success: true,
+    data: {
+      task: "TASK_TEXT_GENERATION",
+    },
+  });
+
+  const wrongObj = {
+    task: "TASK_UNSPECIFIED",
+  };
+
+  const parsedWrongObj = zodSchema.safeParse(wrongObj);
+
+  expect(parsedWrongObj.success).toBe(false);
+});
