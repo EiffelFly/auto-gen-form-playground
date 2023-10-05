@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { JSONSchema7, JSONSchema7Definition } from "json-schema";
+import { JSONSchema7 } from "json-schema";
 
 type InstillJsonSchemaProps = {
   credential_field?: boolean;
@@ -8,258 +8,120 @@ type InstillJsonSchemaProps = {
   nullable?: boolean;
 };
 
-export type InstillJsonSchema = {
+// This type is especially for jsonSchema OneOf properties
+// {"key.subkey.credential": "oauth" }
+export type SelectedItemMap = Record<string, string>;
+
+export type InstillJSONSchema = {
   [Property in keyof JSONSchema7]+?: JSONSchema7[Property] extends boolean
     ? boolean
     : Property extends "enum"
     ? string[]
     : Property extends "if" | "then"
-    ? InstillJsonSchema
+    ? InstillJSONSchema
     : Property extends "allOf"
-    ? InstillJsonSchema[] | undefined
+    ? InstillJSONSchema[] | undefined
     : Property extends "properties" | "patternProperties" | "definitions"
-    ? Record<string, InstillJsonSchema>
-    : JSONSchema7[Property] extends InstillJsonSchema
-    ? InstillJsonSchema
-    : JSONSchema7[Property] extends InstillJsonSchema[]
-    ? InstillJsonSchema[]
-    : JSONSchema7[Property] extends InstillJsonSchema | InstillJsonSchema[]
-    ? InstillJsonSchema | InstillJsonSchema[]
+    ? Record<string, InstillJSONSchema>
+    : JSONSchema7[Property] extends InstillJSONSchema
+    ? InstillJSONSchema
+    : JSONSchema7[Property] extends InstillJSONSchema[]
+    ? InstillJSONSchema[]
+    : JSONSchema7[Property] extends InstillJSONSchema | InstillJSONSchema[]
+    ? InstillJSONSchema | InstillJSONSchema[]
     : JSONSchema7[Property];
 } & InstillJsonSchemaProps;
 
-export const mockSchema: InstillJsonSchema = {
-  $schema: "http://json-schema.org/draft-07/schema#",
-  title: "OpenAI Connector Component Spec",
-  type: "object",
-  required: ["task"],
-  properties: {
-    task: {
-      title: "Task",
-      enum: [
-        "TASK_TEXT_GENERATION",
-        "TASK_TEXT_EMBEDDINGS",
-        "TASK_SPEECH_RECOGNITION",
-      ],
-      default: "TASK_TEXT_GENERATION",
-    },
-    api_key: {
-      title: "API key",
-      credential_field: true,
-    },
-  },
-  allOf: [
-    {
-      if: {
-        properties: {
-          task: {
-            const: "TASK_TEXT_GENERATION",
-          },
-        },
-      },
-      then: {
-        type: "object",
-        required: ["prompt", "model"],
-        properties: {
-          prompt: {
-            type: "string",
-            format: "instill-template-text",
-          },
-          model: {
-            description:
-              "ID of the model to use. See the [model endpoint compatibility](/docs/models/model-endpoint-compatibility) table for details on which models work with the Chat API.",
-            example: "gpt-3.5-turbo",
-            anyOf: [
-              {
-                type: "string",
-              },
-              {
-                type: "string",
-                enum: [
-                  "gpt-4",
-                  "gpt-4-0314",
-                  "gpt-4-0613",
-                  "gpt-4-32k",
-                  "gpt-4-32k-0314",
-                  "gpt-4-32k-0613",
-                  "gpt-3.5-turbo",
-                  "gpt-3.5-turbo-16k",
-                  "gpt-3.5-turbo-0301",
-                  "gpt-3.5-turbo-0613",
-                  "gpt-3.5-turbo-16k-0613",
-                ],
-              },
-            ],
-            "x-oaiTypeLabel": "string",
-            type: "string",
-            format: "instill-template-text",
-          },
-          system_message: {
-            title: "System message",
-            description:
-              'The system message helps set the behavior of the assistant. For example, you can modify the personality of the assistant or provide specific instructions about how it should behave throughout the conversation. By default, the model\u2019s behavior is using a generic message as "You are a helpful assistant."',
-            type: "string",
-            default: "You are a helpful assistant.",
-            maxLength: 2048,
-            format: "instill-template-text",
-          },
-          temperature: {
-            type: "string",
-            minimum: 0,
-            maximum: 2,
-            default: 1,
-            example: 1,
-            nullable: true,
-            description:
-              "What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.\n\nWe generally recommend altering this or `top_p` but not both.\n",
-            format: "instill-template-number",
-          },
-          n: {
-            type: "string",
-            minimum: 1,
-            maximum: 128,
-            default: 1,
-            example: 1,
-            nullable: true,
-            description:
-              "How many chat completion choices to generate for each input message.",
-            format: "instill-template-integer",
-          },
-          max_tokens: {
-            description:
-              "The maximum number of [tokens](/tokenizer) to generate in the chat completion.\n\nThe total length of input tokens and generated tokens is limited by the model's context length. [Example Python code](https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb) for counting tokens.\n",
-            default: "inf",
-            type: "string",
-            format: "instill-template-integer",
-          },
-        },
-      },
-    },
-    {
-      if: {
-        properties: {
-          task: {
-            const: "TASK_TEXT_EMBEDDINGS",
-          },
-        },
-      },
-      then: {
-        type: "object",
-        required: ["text", "model"],
-        properties: {
-          text: {
-            type: "string",
-            format: "instill-template-text",
-          },
-          model: {
-            description:
-              "ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models/overview) for descriptions of them.\n",
-            example: "text-embedding-ada-002",
-            anyOf: [
-              {
-                type: "string",
-              },
-              {
-                type: "string",
-                enum: ["text-embedding-ada-002"],
-              },
-            ],
-            "x-oaiTypeLabel": "string",
-            type: "string",
-            format: "instill-template-text",
-          },
-        },
-      },
-    },
-    {
-      if: {
-        properties: {
-          task: {
-            const: "TASK_SPEECH_RECOGNITION",
-          },
-        },
-      },
-      then: {
-        type: "object",
-        required: ["audio", "model"],
-        properties: {
-          audio: {
-            description:
-              "The audio file object (not file name) to transcribe, in one of these formats: mp3, mp4, mpeg, mpga, m4a, wav, or webm.\n",
-            type: "string",
-            "x-oaiTypeLabel": "file",
-            format: "instill-template-audio",
-          },
-          model: {
-            description:
-              "ID of the model to use. Only `whisper-1` is currently available.\n",
-            example: "whisper-1",
-            anyOf: [
-              {
-                type: "string",
-              },
-              {
-                type: "string",
-                enum: ["whisper-1"],
-              },
-            ],
-            "x-oaiTypeLabel": "string",
-            type: "string",
-            format: "instill-template-string",
-          },
-          temperature: {
-            description:
-              "The sampling temperature, between 0 and 1. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic. If set to 0, the model will use [log probability](https://en.wikipedia.org/wiki/Log_probability) to automatically increase the temperature until certain thresholds are hit.\n",
-            type: "string",
-            default: 0,
-            format: "instill-template-number",
-          },
-          language: {
-            description:
-              "The language of the input audio. Supplying the input language in [ISO-639-1](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) format will improve accuracy and latency.\n",
-            type: "string",
-            format: "instill-template-text",
-          },
-          prompt: {
-            description:
-              "An optional text to guide the model's style or continue a previous audio segment. The [prompt](/docs/guides/speech-to-text/prompting) should match the audio language.\n",
-            type: "string",
-            format: "instill-template-text",
-          },
-        },
-      },
-    },
-  ],
-};
-
 type instillZodSchema = z.ZodTypeAny;
 
-export const transformInstillSchemaToZod = ({
+export const transformInstillJSONSchemaToZod = ({
   parentSchema,
   targetSchema,
+  selectedItemMap,
   propertyKey,
+  propertyPath,
+  forceOptional,
 }: {
-  parentSchema: InstillJsonSchema | JSONSchema7;
-  targetSchema: InstillJsonSchema | JSONSchema7;
+  parentSchema: InstillJSONSchema;
+  targetSchema: InstillJSONSchema;
+  selectedItemMap: SelectedItemMap | null;
   propertyKey?: string;
+  propertyPath?: string;
+  forceOptional?: boolean;
 }): instillZodSchema => {
-  // we don't have oneOf field right now
+  // const field will be ignored
 
-  let instillZodSchema: instillZodSchema = z.any();
+  let instillZodSchema: z.ZodTypeAny = z.any();
+
+  if (targetSchema.const) {
+    instillZodSchema = z.literal(targetSchema.const as string);
+    return instillZodSchema;
+  }
+
+  // Handle oneOf field
+  if (targetSchema.oneOf) {
+    const oneOfConditions = targetSchema.oneOf as InstillJSONSchema[];
+
+    const selectedSchema = selectedItemMap
+      ? oneOfConditions.find((condition) => {
+          const { constKey, constValue } = retriveConstInfo(
+            condition.properties ?? {}
+          );
+
+          const accessPath = propertyPath
+            ? `${propertyPath}.${constKey}`
+            : constKey;
+
+          if (!accessPath) {
+            return false;
+          }
+
+          return (
+            constKey && constValue && selectedItemMap[accessPath] === constValue
+          );
+        })
+      : oneOfConditions[0];
+
+    if (selectedSchema) {
+      instillZodSchema = transformInstillJSONSchemaToZod({
+        parentSchema,
+        targetSchema: { type: targetSchema.type, ...selectedSchema },
+        selectedItemMap,
+      });
+    }
+
+    return instillZodSchema;
+  }
 
   // Handle the anyOf fields
-
   if (targetSchema.anyOf && targetSchema.anyOf.length > 0) {
-    const anyOfConditions = targetSchema.anyOf;
+    const anyOfConditions = targetSchema.anyOf as InstillJSONSchema[];
     const anyOfSchemaArray: z.ZodTypeAny[] = [];
+
+    const isRequired = propertyKey
+      ? Array.isArray(parentSchema.required) &&
+        parentSchema.required.includes(propertyKey)
+      : false;
 
     for (const condition of anyOfConditions) {
       if (typeof condition !== "boolean") {
-        const anyOfSchema = transformInstillSchemaToZod({
-          parentSchema,
-          targetSchema: condition,
-        });
-        anyOfSchemaArray.push(anyOfSchema);
+        if (condition.properties) {
+          const anyOfSchema = parseProperties({
+            properties: condition.properties,
+            parentSchema: condition,
+            selectedItemMap,
+            propertyPath,
+          });
+          anyOfSchemaArray.push(anyOfSchema);
+        } else {
+          const anyOfSchema = transformInstillJSONSchemaToZod({
+            parentSchema,
+            targetSchema: condition,
+            selectedItemMap,
+          });
+
+          anyOfSchemaArray.push(anyOfSchema);
+        }
       }
     }
 
@@ -268,12 +130,7 @@ export const transformInstillSchemaToZod = ({
       anyOfSchemaArray as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]
     );
 
-    const isRequired =
-      propertyKey &&
-      Array.isArray(parentSchema.required) &&
-      parentSchema.required.includes(propertyKey);
-
-    if (!isRequired) {
+    if (!isRequired || forceOptional) {
       instillZodSchema = instillZodSchema.optional();
     }
 
@@ -281,7 +138,6 @@ export const transformInstillSchemaToZod = ({
   }
 
   // Handle the enum fields
-
   if (targetSchema.enum) {
     // We need to do the castring here to make typescript happy.
     // The reason is typescript need to know the amount of the element
@@ -292,10 +148,10 @@ export const transformInstillSchemaToZod = ({
     const enumValues = targetSchema.enum as [string, ...string[]];
     instillZodSchema = z.enum(enumValues);
 
-    const isRequired =
-      propertyKey &&
-      Array.isArray(parentSchema.required) &&
-      parentSchema.required.includes(propertyKey);
+    const isRequired = propertyKey
+      ? Array.isArray(parentSchema.required) &&
+        parentSchema.required.includes(propertyKey)
+      : false;
 
     if (!isRequired) {
       instillZodSchema = instillZodSchema.optional();
@@ -304,20 +160,7 @@ export const transformInstillSchemaToZod = ({
     return instillZodSchema;
   }
 
-  // We will use discriminatedUnion to handle allOf
-  // ref: https://github.com/colinhacks/zod/discussions/2099
-
-  // if (targetSchema.allOf && targetSchema.allOf.length > 0) {
-  //   const allConditions = targetSchema.allOf as InstillJsonSchema[];
-
-  //   const conditionFields = allConditions.map((condition) => {
-  //     const ifProperties = Object.entries(condition.if?.properties || {});
-  //     return ifProperties[0][0];
-  //   });
-  // }
-
   // Handle the normal type of the json schema
-
   switch (targetSchema.type) {
     case "array": {
       if (
@@ -325,9 +168,10 @@ export const transformInstillSchemaToZod = ({
         !Array.isArray(targetSchema.items)
       ) {
         let arraySchema = z.array(
-          transformInstillSchemaToZod({
+          transformInstillJSONSchemaToZod({
             parentSchema,
-            targetSchema: targetSchema.items,
+            targetSchema: targetSchema.items as InstillJSONSchema,
+            selectedItemMap,
           })
         );
 
@@ -342,23 +186,14 @@ export const transformInstillSchemaToZod = ({
       break;
     }
     case "object": {
-      const instillSchemaPropertyEntries = Object.entries(
-        targetSchema.properties || {}
-      );
+      const objectProperties = targetSchema.properties ?? {};
 
-      let objectSchema = z.object({});
-
-      for (const [entryKey, entryJsonSchema] of instillSchemaPropertyEntries) {
-        if (typeof entryJsonSchema !== "boolean") {
-          objectSchema = objectSchema.extend({
-            [entryKey]: transformInstillSchemaToZod({
-              parentSchema: targetSchema,
-              targetSchema: entryJsonSchema,
-              propertyKey: entryKey,
-            }),
-          });
-        }
-      }
+      const objectSchema = parseProperties({
+        properties: objectProperties as Record<string, InstillJSONSchema>,
+        parentSchema: targetSchema,
+        selectedItemMap,
+        propertyPath,
+      });
 
       if (propertyKey) {
         instillZodSchema = z.object({
@@ -374,12 +209,10 @@ export const transformInstillSchemaToZod = ({
       instillZodSchema = z.string();
       break;
     }
-
     case "boolean": {
       instillZodSchema = z.boolean();
       break;
     }
-
     case "integer": {
       let integerSchema = z.number();
 
@@ -396,14 +229,64 @@ export const transformInstillSchemaToZod = ({
     }
   }
 
-  const isRequired =
-    propertyKey &&
-    Array.isArray(parentSchema.required) &&
-    parentSchema.required.includes(propertyKey);
+  const isRequired = propertyKey
+    ? Array.isArray(parentSchema.required) &&
+      parentSchema.required.includes(propertyKey)
+    : false;
 
-  if (!isRequired) {
+  if (!isRequired || forceOptional) {
     instillZodSchema = instillZodSchema.optional();
   }
 
   return instillZodSchema;
 };
+
+function parseProperties({
+  properties,
+  parentSchema,
+  selectedItemMap,
+  propertyPath,
+}: {
+  properties: Record<string, InstillJSONSchema>;
+  parentSchema: InstillJSONSchema;
+  selectedItemMap: SelectedItemMap | null;
+  propertyPath?: string;
+}) {
+  let objectSchema = z.object({});
+
+  for (const [entryKey, entryJsonSchema] of Object.entries(properties)) {
+    if (typeof entryJsonSchema !== "boolean") {
+      objectSchema = objectSchema.extend({
+        [entryKey]: transformInstillJSONSchemaToZod({
+          parentSchema,
+          targetSchema: entryJsonSchema,
+          propertyKey: entryKey,
+          propertyPath: propertyPath ? `${propertyPath}.${entryKey}` : entryKey,
+          selectedItemMap,
+        }),
+      });
+    }
+  }
+
+  return objectSchema;
+}
+
+function retriveConstInfo(properties: Record<string, InstillJSONSchema>) {
+  let constKey: null | string = null;
+  let constValue: null | string = null;
+
+  for (const [key, value] of Object.entries(properties)) {
+    if (typeof value === "object" && value.const) {
+      constKey = key;
+      constValue = value.const as string;
+      break;
+    }
+  }
+
+  return {
+    constKey,
+    constValue,
+  };
+}
+
+export const transformInstillSchemaToFormTree = () => {};
