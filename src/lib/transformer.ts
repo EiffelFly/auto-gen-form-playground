@@ -314,6 +314,7 @@ type InstillFormBaseFields = {
   isRequired: boolean;
   title?: string;
   description?: string;
+  isMultiline?: boolean;
 };
 
 export type InstillFormItem = {
@@ -826,3 +827,5 @@ const mockData = {
   title: "OpenAI Component",
   type: "object",
 };
+
+export function pickFormFieldsFromInstillFormTree(tree: InstillFormTree) {}
