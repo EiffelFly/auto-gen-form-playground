@@ -4,6 +4,15 @@ import {
   JSONSchema7Definition,
   JSONSchema7TypeName,
 } from "json-schema";
+import * as React from "react";
+import { OneOfConditionField } from "@/components/OneOfConditionField";
+import { GeneralUseFormReturn } from "@instill-ai/toolkit";
+import { BooleanField } from "@/components/BooleanField";
+import { SingleSelectField } from "@/components/SingleSelectField";
+import { TextAreaField } from "@/components/TextAreaField";
+import { TextField } from "@/components/TextField";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 type InstillJsonSchemaProps = {
   credential_field?: boolean;
@@ -17,7 +26,7 @@ type InstillJsonSchemaProps = {
 
 // This type is especially for jsonSchema OneOf properties
 // {"key.subkey.credential": "oauth" }
-export type SelectedItemMap = Record<string, string>;
+export type SelectedConditionMap = Record<string, string>;
 
 type InstillJSONSchemaDefinition = InstillJSONSchema | boolean;
 
@@ -56,14 +65,14 @@ type instillZodSchema = z.ZodTypeAny;
 export const transformInstillJSONSchemaToZod = ({
   parentSchema,
   targetSchema,
-  selectedItemMap,
+  selectedConditionMap,
   propertyKey,
   propertyPath,
   forceOptional,
 }: {
   parentSchema: InstillJSONSchema;
   targetSchema: InstillJSONSchema;
-  selectedItemMap: SelectedItemMap | null;
+  selectedConditionMap: SelectedConditionMap | null;
   propertyKey?: string;
   propertyPath?: string;
   forceOptional?: boolean;
@@ -81,7 +90,7 @@ export const transformInstillJSONSchemaToZod = ({
   if (targetSchema.oneOf) {
     const oneOfConditions = targetSchema.oneOf as InstillJSONSchema[];
 
-    const selectedSchema = selectedItemMap
+    const selectedSchema = selectedConditionMap
       ? oneOfConditions.find((condition) => {
           const { constKey, constValue } = retriveConstInfo(
             condition.properties ?? {}
@@ -96,7 +105,9 @@ export const transformInstillJSONSchemaToZod = ({
           }
 
           return (
-            constKey && constValue && selectedItemMap[accessPath] === constValue
+            constKey &&
+            constValue &&
+            selectedConditionMap[accessPath] === constValue
           );
         })
       : oneOfConditions[0];
@@ -105,7 +116,7 @@ export const transformInstillJSONSchemaToZod = ({
       instillZodSchema = transformInstillJSONSchemaToZod({
         parentSchema,
         targetSchema: { type: targetSchema.type, ...selectedSchema },
-        selectedItemMap,
+        selectedConditionMap,
       });
     }
 
@@ -128,7 +139,7 @@ export const transformInstillJSONSchemaToZod = ({
           const anyOfSchema = parseProperties({
             properties: condition.properties,
             parentSchema: condition,
-            selectedItemMap,
+            selectedConditionMap,
             propertyPath,
           });
           anyOfSchemaArray.push(anyOfSchema);
@@ -136,7 +147,7 @@ export const transformInstillJSONSchemaToZod = ({
           const anyOfSchema = transformInstillJSONSchemaToZod({
             parentSchema,
             targetSchema: condition,
-            selectedItemMap,
+            selectedConditionMap,
           });
 
           anyOfSchemaArray.push(anyOfSchema);
@@ -190,7 +201,7 @@ export const transformInstillJSONSchemaToZod = ({
           transformInstillJSONSchemaToZod({
             parentSchema,
             targetSchema: targetSchema.items as InstillJSONSchema,
-            selectedItemMap,
+            selectedConditionMap,
           })
         );
 
@@ -210,7 +221,7 @@ export const transformInstillJSONSchemaToZod = ({
       const objectSchema = parseProperties({
         properties: objectProperties as Record<string, InstillJSONSchema>,
         parentSchema: targetSchema,
-        selectedItemMap,
+        selectedConditionMap,
         propertyPath,
       });
 
@@ -263,12 +274,12 @@ export const transformInstillJSONSchemaToZod = ({
 function parseProperties({
   properties,
   parentSchema,
-  selectedItemMap,
+  selectedConditionMap,
   propertyPath,
 }: {
   properties: Record<string, InstillJSONSchema>;
   parentSchema: InstillJSONSchema;
-  selectedItemMap: SelectedItemMap | null;
+  selectedConditionMap: SelectedConditionMap | null;
   propertyPath?: string;
 }) {
   let objectSchema = z.object({});
@@ -281,7 +292,7 @@ function parseProperties({
           targetSchema: entryJsonSchema,
           propertyKey: entryKey,
           propertyPath: propertyPath ? `${propertyPath}.${entryKey}` : entryKey,
-          selectedItemMap,
+          selectedConditionMap,
         }),
       });
     }
@@ -352,7 +363,7 @@ export function transformInstillJSONSchemaToFormTree({
   parentSchema,
 }: {
   targetSchema: InstillJSONSchemaDefinition;
-  key: string;
+  key?: string;
   path?: string;
   parentSchema?: InstillJSONSchema;
 }): InstillFormTree {
@@ -828,4 +839,168 @@ const mockData = {
   type: "object",
 };
 
-export function pickFormFieldsFromInstillFormTree(tree: InstillFormTree) {}
+export function pickFieldComponentFromInstillFormTree({
+  form,
+  tree,
+  selectedConditionMap,
+  setSelectedConditionMap,
+  disabledAll,
+}: {
+  form: GeneralUseFormReturn;
+  tree: InstillFormTree;
+  selectedConditionMap: SelectedConditionMap | null;
+  setSelectedConditionMap: React.Dispatch<
+    React.SetStateAction<SelectedConditionMap | null>
+  >;
+  disabledAll?: boolean;
+}): React.ReactNode {
+  if (tree._type === "formGroup") {
+    return (
+      <React.Fragment key={tree.path || tree.fieldKey}>
+        {tree.properties.map((property) => {
+          return pickFieldComponentFromInstillFormTree({
+            form,
+            tree: property,
+            selectedConditionMap,
+            setSelectedConditionMap,
+            disabledAll,
+          });
+        })}
+      </React.Fragment>
+    );
+  }
+
+  if (tree._type === "formCondition") {
+    const conditionComponents = Object.fromEntries(
+      Object.entries(tree.conditions).map(([k, v]) => {
+        return [
+          k,
+          pickFieldComponentFromInstillFormTree({
+            tree: v,
+            form,
+            selectedConditionMap,
+            setSelectedConditionMap,
+            disabledAll,
+          }),
+        ];
+      })
+    );
+
+    return (
+      <OneOfConditionField
+        form={form}
+        fieldKey={tree.fieldKey}
+        setSelectedConditionMap={setSelectedConditionMap}
+        key={tree.path}
+        conditionComponents={conditionComponents}
+        title={tree.title}
+      />
+    );
+  }
+
+  if (tree._type === "formArray") {
+    return pickFieldComponentFromInstillFormTree({
+      tree: tree.properties,
+      form,
+      selectedConditionMap,
+      setSelectedConditionMap,
+      disabledAll,
+    });
+  }
+
+  if (tree.const) {
+    return null;
+  }
+
+  if (tree.type === "boolean") {
+    return (
+      <BooleanField
+        key={tree.path}
+        fieldKey={tree.fieldKey}
+        title={tree.title ?? tree.fieldKey ?? null}
+        description={tree.description}
+        form={form}
+      />
+    );
+  }
+
+  if (tree.type === "string" && tree.enum && tree.enum.length > 0) {
+    return (
+      <SingleSelectField
+        key={tree.path}
+        fieldKey={tree.fieldKey}
+        form={form}
+        title={tree.title ?? tree.fieldKey ?? null}
+        description={tree.description}
+        options={tree.enum}
+      />
+    );
+  }
+
+  if (tree.type === "string" && tree.isMultiline) {
+    return (
+      <TextAreaField
+        key={tree.path}
+        fieldKey={tree.fieldKey}
+        form={form}
+        title={tree.title ?? tree.fieldKey ?? null}
+        description={tree.description}
+      />
+    );
+  }
+
+  return (
+    <TextField
+      key={tree.path}
+      fieldKey={tree.fieldKey}
+      form={form}
+      title={tree.title ?? tree.fieldKey ?? null}
+      description={tree.description}
+    />
+  );
+}
+
+export function useInstillForm(schema: InstillJSONSchema | null) {
+  const [selectedConditionMap, setSelectedConditionMap] =
+    React.useState<SelectedConditionMap | null>(null);
+
+  const validatorSchema = React.useMemo(() => {
+    if (!schema) {
+      return z.any();
+    }
+
+    return transformInstillJSONSchemaToZod({
+      parentSchema: schema,
+      targetSchema: schema,
+      selectedConditionMap,
+    });
+  }, [schema, selectedConditionMap]);
+
+  const form = useForm<z.infer<typeof validatorSchema>>({
+    resolver: zodResolver(validatorSchema),
+  });
+
+  const fields = React.useMemo(() => {
+    if (!schema) {
+      return;
+    }
+    const formTree = transformInstillJSONSchemaToFormTree({
+      targetSchema: schema,
+      parentSchema: schema,
+      key: "root",
+    });
+
+    return pickFieldComponentFromInstillFormTree({
+      form,
+      tree: formTree,
+      selectedConditionMap,
+      setSelectedConditionMap,
+    });
+  }, [schema, selectedConditionMap]);
+
+  return {
+    form,
+    fields,
+    validatorSchema,
+  };
+}

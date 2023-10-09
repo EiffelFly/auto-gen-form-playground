@@ -6,9 +6,9 @@ export const SingleSelectField = (props: {
   fieldKey: string;
   title: string;
   description?: string;
-  items: string[];
+  options: string[];
 }) => {
-  const { form, fieldKey, title, items, description } = props;
+  const { form, fieldKey, title, options, description } = props;
 
   return (
     <Form.Field
@@ -28,14 +28,14 @@ export const SingleSelectField = (props: {
                 </Select.Trigger>
               </Form.Control>
               <Select.Content>
-                {items.map((item) => {
+                {options.map((option) => {
                   return (
                     <Select.Item
-                      key={item}
-                      value={item}
+                      key={option}
+                      value={option}
                       className="my-auto text-semantic-fg-primary product-body-text-2-regular group-hover:text-semantic-bg-primary data-[highlighted]:text-semantic-bg-primary"
                     >
-                      <p className="my-auto">{item}</p>
+                      <p className="my-auto">{option}</p>
                     </Select.Item>
                   );
                 })}

@@ -40,7 +40,7 @@ test("should transform basic json schema to zod schema", () => {
   const zodSchema = transformInstillJSONSchemaToZod({
     parentSchema: schema,
     targetSchema: schema,
-    selectedItemMap: null,
+    selectedConditionMap: null,
   });
 
   const parsedObj = zodSchema.safeParse(testedObj);
@@ -77,7 +77,7 @@ test("should transform optional field", () => {
   const zodSchema = transformInstillJSONSchemaToZod({
     parentSchema: schema,
     targetSchema: schema,
-    selectedItemMap: null,
+    selectedConditionMap: null,
   });
 
   const parsedObj = zodSchema.safeParse(testedObj);
@@ -122,7 +122,7 @@ test("should transform enum fields", () => {
   const zodSchema = transformInstillJSONSchemaToZod({
     parentSchema: schema,
     targetSchema: schema,
-    selectedItemMap: null,
+    selectedConditionMap: null,
   });
 
   const parsedObj = zodSchema.safeParse(testedObj);
@@ -172,7 +172,7 @@ test("should transform anyOf fields", () => {
   const zodSchema = transformInstillJSONSchemaToZod({
     parentSchema: schema,
     targetSchema: schema,
-    selectedItemMap: null,
+    selectedConditionMap: null,
   });
 
   const parsedObj = zodSchema.safeParse(testedObj);
@@ -243,7 +243,7 @@ test("should transform oneOf fields", () => {
   const zodSchema = transformInstillJSONSchemaToZod({
     parentSchema: schema,
     targetSchema: schema,
-    selectedItemMap: {
+    selectedConditionMap: {
       protocol: "http",
     },
   });
@@ -439,7 +439,7 @@ test("should transform nested oneOf fields", () => {
   const zodSchema = transformInstillJSONSchemaToZod({
     parentSchema: schema,
     targetSchema: schema,
-    selectedItemMap: {
+    selectedConditionMap: {
       protocol: "https",
       "tunnel_method.tunnel_method": "NO_TUNNEL",
     },
