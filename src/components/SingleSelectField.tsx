@@ -3,17 +3,18 @@ import { GeneralUseFormReturn } from "@instill-ai/toolkit";
 
 export const SingleSelectField = (props: {
   form: GeneralUseFormReturn;
-  fieldKey: string;
-  title: string;
+  path: string;
+  title: string | null;
   description?: string;
   options: string[];
 }) => {
-  const { form, fieldKey, title, options, description } = props;
+  const { form, path, title, options, description } = props;
 
   return (
     <Form.Field
+      key={path}
       control={form.control}
-      name={fieldKey}
+      name={path}
       render={({ field }) => {
         return (
           <Form.Item>

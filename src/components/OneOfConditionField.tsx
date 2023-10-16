@@ -5,14 +5,14 @@ import * as React from "react";
 
 export const OneOfConditionField = ({
   form,
-  fieldKey,
+  path,
   title,
   description,
   conditionComponents,
   setSelectedConditionMap,
 }: {
   form: GeneralUseFormReturn;
-  fieldKey: string;
+  path: string;
   setSelectedConditionMap: React.Dispatch<
     React.SetStateAction<SelectedConditionMap | null>
   >;
@@ -24,11 +24,13 @@ export const OneOfConditionField = ({
     return Object.entries(conditionComponents).map(([k, v]) => k);
   }, [conditionComponents]);
 
+  console.log(path);
+
   return (
-    <div className="flex flex-col">
+    <div key={path} className="flex flex-col">
       <Form.Field
         control={form.control}
-        name={fieldKey}
+        name={path}
         render={({ field }) => {
           return (
             <Form.Item>
@@ -39,7 +41,7 @@ export const OneOfConditionField = ({
                   setSelectedConditionMap((prev) => {
                     return {
                       ...prev,
-                      [fieldKey]: event,
+                      [path]: event,
                     };
                   });
                 }}
@@ -70,9 +72,9 @@ export const OneOfConditionField = ({
           );
         }}
       />
-      {conditionComponents[form.watch(fieldKey)] ? (
+      {conditionComponents[form.watch(path)] ? (
         <div className="flex flex-col gap-y-5">
-          {conditionComponents[form.watch(fieldKey)]}
+          {conditionComponents[form.watch(path)]}
         </div>
       ) : null}
     </div>

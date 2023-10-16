@@ -3,15 +3,15 @@ import { GeneralUseFormReturn } from "@instill-ai/toolkit";
 
 export const TextAreaField = (props: {
   form: GeneralUseFormReturn;
-  fieldKey: string;
-  title: string;
+  path: string;
+  title: string | null;
   description?: string;
 }) => {
-  const { form, fieldKey, title, description } = props;
+  const { form, path, title, description } = props;
   return (
     <Form.Field
       control={form.control}
-      name={fieldKey}
+      name={path}
       render={({ field }) => {
         return (
           <Form.Item>

@@ -3,16 +3,16 @@ import { GeneralUseFormReturn } from "@instill-ai/toolkit";
 
 export const BooleanField = (props: {
   form: GeneralUseFormReturn;
-  fieldKey: string;
-  title: string;
+  path: string;
+  title: null | string;
   description?: string;
 }) => {
-  const { form, fieldKey, title, description } = props;
+  const { form, path, title, description } = props;
   return (
     <Form.Field
-      key={fieldKey}
+      key={path}
       control={form.control}
-      name={fieldKey}
+      name={path}
       render={({ field }) => {
         return (
           <Form.Item>

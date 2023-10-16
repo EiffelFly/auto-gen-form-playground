@@ -6,7 +6,7 @@ import {
 } from "json-schema";
 import * as React from "react";
 import { OneOfConditionField } from "@/components/OneOfConditionField";
-import { GeneralUseFormReturn } from "@instill-ai/toolkit";
+import { GeneralUseFormReturn, Nullable } from "@instill-ai/toolkit";
 import { BooleanField } from "@/components/BooleanField";
 import { SingleSelectField } from "@/components/SingleSelectField";
 import { TextAreaField } from "@/components/TextAreaField";
@@ -117,6 +117,8 @@ export const transformInstillJSONSchemaToZod = ({
         parentSchema,
         targetSchema: { type: targetSchema.type, ...selectedSchema },
         selectedConditionMap,
+        propertyKey,
+        propertyPath,
       });
     }
 
@@ -183,6 +185,8 @@ export const transformInstillJSONSchemaToZod = ({
         parentSchema.required.includes(propertyKey)
       : false;
 
+    // console.log(propertyKey, parentSchema, isRequired);
+
     if (!isRequired) {
       instillZodSchema = instillZodSchema.optional();
     }
@@ -205,33 +209,34 @@ export const transformInstillJSONSchemaToZod = ({
           })
         );
 
-        if (propertyKey) {
-          instillZodSchema = z.object({
-            propertyKey: arraySchema,
-          });
-        } else {
-          instillZodSchema = arraySchema;
-        }
+        instillZodSchema = arraySchema;
       }
       break;
     }
     case "object": {
       const objectProperties = targetSchema.properties ?? {};
 
-      const objectSchema = parseProperties({
-        properties: objectProperties as Record<string, InstillJSONSchema>,
-        parentSchema: targetSchema,
-        selectedConditionMap,
-        propertyPath,
-      });
+      let objectSchema = z.object({});
 
-      if (propertyKey) {
-        instillZodSchema = z.object({
-          propertyKey: objectSchema,
-        });
-      } else {
-        instillZodSchema = objectSchema;
+      for (const [entryKey, entryJsonSchema] of Object.entries(
+        objectProperties
+      )) {
+        if (typeof entryJsonSchema !== "boolean") {
+          objectSchema = objectSchema.extend({
+            [entryKey]: transformInstillJSONSchemaToZod({
+              parentSchema: targetSchema,
+              targetSchema: entryJsonSchema,
+              propertyKey: entryKey,
+              propertyPath: propertyPath
+                ? `${propertyPath}.${entryKey}`
+                : entryKey,
+              selectedConditionMap,
+            }),
+          });
+        }
       }
+
+      instillZodSchema = objectSchema;
 
       break;
     }
@@ -243,16 +248,13 @@ export const transformInstillJSONSchemaToZod = ({
       instillZodSchema = z.boolean();
       break;
     }
-    case "integer": {
-      let integerSchema = z.number();
+    case "integer":
+    case "number": {
+      // Because number field can also write string as reference. We need to
+      // set the initial zod schema to string and then validate it with
+      // superRefine.
 
-      if (targetSchema.minimum !== undefined) {
-        integerSchema.min(targetSchema.minimum);
-      }
-
-      if (targetSchema.maximum !== undefined) {
-        integerSchema.max(targetSchema.maximum);
-      }
+      let integerSchema = z.string();
 
       instillZodSchema = integerSchema;
       break;
@@ -320,8 +322,8 @@ function retriveConstInfo(properties: Record<string, InstillJSONSchema>) {
 }
 
 type InstillFormBaseFields = {
-  fieldKey: string;
-  path: string;
+  fieldKey: null | string;
+  path: null | string;
   isRequired: boolean;
   title?: string;
   description?: string;
@@ -358,8 +360,8 @@ export type InstillFormTree =
 
 export function transformInstillJSONSchemaToFormTree({
   targetSchema,
-  key = "",
-  path = key,
+  key,
+  path,
   parentSchema,
 }: {
   targetSchema: InstillJSONSchemaDefinition;
@@ -370,6 +372,7 @@ export function transformInstillJSONSchemaToFormTree({
   let isRequired = false;
 
   if (
+    key &&
     typeof parentSchema !== "boolean" &&
     Array.isArray(parentSchema?.required) &&
     parentSchema?.required.includes(key)
@@ -380,8 +383,8 @@ export function transformInstillJSONSchemaToFormTree({
   if (typeof targetSchema === "boolean") {
     return {
       _type: "formItem",
-      fieldKey: key,
-      path,
+      fieldKey: key ?? null,
+      path: (path || key) ?? null,
       isRequired: false,
       type: "null",
     };
@@ -417,8 +420,8 @@ export function transformInstillJSONSchemaToFormTree({
     return {
       ...pickBaseFields(targetSchema),
       _type: "formCondition",
-      fieldKey: key,
-      path: path || key,
+      fieldKey: key ?? null,
+      path: (path || key) ?? null,
       conditions,
       isRequired,
     };
@@ -433,8 +436,8 @@ export function transformInstillJSONSchemaToFormTree({
     return {
       ...pickBaseFields(targetSchema),
       _type: "formArray",
-      fieldKey: key,
-      path: path || key,
+      fieldKey: key ?? null,
+      path: (path || key) ?? null,
       isRequired,
       properties: transformInstillJSONSchemaToFormTree({
         targetSchema: targetSchema.items,
@@ -459,8 +462,8 @@ export function transformInstillJSONSchemaToFormTree({
     return {
       ...pickBaseFields(targetSchema),
       _type: "formGroup",
-      fieldKey: key,
-      path: path || key,
+      fieldKey: key ?? null,
+      path: (path || key) ?? null,
       isRequired,
       jsonSchema: targetSchema,
       properties,
@@ -470,8 +473,8 @@ export function transformInstillJSONSchemaToFormTree({
   return {
     ...pickBaseFields(targetSchema),
     _type: "formItem",
-    fieldKey: key,
-    path: path || key,
+    fieldKey: key ?? null,
+    path: (path || key) ?? null,
     isRequired,
     type:
       (Array.isArray(targetSchema.type)
@@ -886,12 +889,22 @@ export function pickFieldComponentFromInstillFormTree({
       })
     );
 
+    // We will use the const path as the OneOfConditionField's path
+
+    const constPath = tree.conditions[
+      Object.keys(tree.conditions)[0]
+    ].properties.find((e) => "const" in e)?.path;
+
+    if (!constPath) {
+      return null;
+    }
+
     return (
       <OneOfConditionField
         form={form}
-        fieldKey={tree.fieldKey}
+        path={constPath}
         setSelectedConditionMap={setSelectedConditionMap}
-        key={tree.path}
+        key={constPath}
         conditionComponents={conditionComponents}
         title={tree.title}
       />
@@ -908,7 +921,7 @@ export function pickFieldComponentFromInstillFormTree({
     });
   }
 
-  if (tree.const) {
+  if (tree.const || !tree.path) {
     return null;
   }
 
@@ -916,7 +929,7 @@ export function pickFieldComponentFromInstillFormTree({
     return (
       <BooleanField
         key={tree.path}
-        fieldKey={tree.fieldKey}
+        path={tree.path}
         title={tree.title ?? tree.fieldKey ?? null}
         description={tree.description}
         form={form}
@@ -928,7 +941,7 @@ export function pickFieldComponentFromInstillFormTree({
     return (
       <SingleSelectField
         key={tree.path}
-        fieldKey={tree.fieldKey}
+        path={tree.path}
         form={form}
         title={tree.title ?? tree.fieldKey ?? null}
         description={tree.description}
@@ -941,7 +954,7 @@ export function pickFieldComponentFromInstillFormTree({
     return (
       <TextAreaField
         key={tree.path}
-        fieldKey={tree.fieldKey}
+        path={tree.path}
         form={form}
         title={tree.title ?? tree.fieldKey ?? null}
         description={tree.description}
@@ -952,7 +965,7 @@ export function pickFieldComponentFromInstillFormTree({
   return (
     <TextField
       key={tree.path}
-      fieldKey={tree.fieldKey}
+      path={tree.path}
       form={form}
       title={tree.title ?? tree.fieldKey ?? null}
       description={tree.description}
@@ -964,7 +977,7 @@ export function useInstillForm(schema: InstillJSONSchema | null) {
   const [selectedConditionMap, setSelectedConditionMap] =
     React.useState<SelectedConditionMap | null>(null);
 
-  const validatorSchema = React.useMemo(() => {
+  const ValidatorSchema = React.useMemo(() => {
     if (!schema) {
       return z.any();
     }
@@ -976,31 +989,52 @@ export function useInstillForm(schema: InstillJSONSchema | null) {
     });
   }, [schema, selectedConditionMap]);
 
-  const form = useForm<z.infer<typeof validatorSchema>>({
-    resolver: zodResolver(validatorSchema),
+  const form = useForm<z.infer<typeof ValidatorSchema>>({
+    resolver: zodResolver(ValidatorSchema),
   });
 
-  const fields = React.useMemo(() => {
+  const { fields, formTree } = React.useMemo(() => {
     if (!schema) {
-      return;
+      return { fields: null, formTree: null };
     }
     const formTree = transformInstillJSONSchemaToFormTree({
       targetSchema: schema,
       parentSchema: schema,
-      key: "root",
     });
 
-    return pickFieldComponentFromInstillFormTree({
-      form,
-      tree: formTree,
-      selectedConditionMap,
-      setSelectedConditionMap,
-    });
+    return {
+      fields: pickFieldComponentFromInstillFormTree({
+        form,
+        tree: formTree,
+        selectedConditionMap,
+        setSelectedConditionMap,
+      }),
+      formTree,
+    };
   }, [schema, selectedConditionMap]);
 
   return {
     form,
     fields,
-    validatorSchema,
+    ValidatorSchema,
+    formTree,
   };
 }
+
+export type SuperRefineRule = {
+  key: string;
+  validator: (value: any) => SuperRefineRuleValidatorReturn;
+};
+
+export type SuperRefineRuleValidatorReturn =
+  | SuperRefineRuleValidatorValidReturn
+  | SuperRefineRuleValidatorInvalidReturn;
+
+export type SuperRefineRuleValidatorValidReturn = {
+  valid: true;
+};
+
+export type SuperRefineRuleValidatorInvalidReturn = {
+  valid: false;
+  error: string;
+};
