@@ -132,6 +132,7 @@ export function transformInstillJSONSchemaToFormTree({
 
 const baseFields: Array<keyof InstillJSONSchema> = [
   "default",
+  "example",
   "examples",
   "description",
   "pattern",
