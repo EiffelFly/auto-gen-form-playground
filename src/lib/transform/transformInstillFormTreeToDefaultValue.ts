@@ -1,35 +1,13 @@
-import { GeneralRecord, Nullable } from "@instill-ai/toolkit";
-import { InstillFormTree, SelectedConditionMap } from "../type";
-import { retriveConstInfo } from "../retrieveConstInfo";
+import { GeneralRecord, Nullable, dot } from "@instill-ai/toolkit";
+import { InstillFormTree } from "../type";
 
 export function transformInstillFormTreeToDefaultValue({
   tree,
-  selectedConditionMap,
 }: {
   tree: InstillFormTree;
-  selectedConditionMap: SelectedConditionMap;
 }): Nullable<GeneralRecord> {
-  if (tree._type === "formGroup") {
-    let formGroupValue: Record<string, any> = {};
-
-    for (const property of tree.properties) {
-      formGroupValue = {
-        ...formGroupValue,
-        ...transformInstillFormTreeToDefaultValue({
-          tree: property,
-          selectedConditionMap,
-        }),
-      };
-    }
-
-    if (tree.fieldKey) {
-      return {
-        [tree.fieldKey]: formGroupValue,
-      };
-    } else {
-      return formGroupValue;
-    }
-  }
+  // We don't need to set the field key for formCondition because in the
+  // conditions are formGroup, we will set the fieldKey there
 
   if (tree._type === "formCondition") {
     let formConditionValue: GeneralRecord = {};
@@ -38,33 +16,43 @@ export function transformInstillFormTreeToDefaultValue({
       Object.keys(tree.conditions)[0]
     ].properties.find((e) => "const" in e);
 
-    if (!constField || !constField.path) {
-      if (tree.fieldKey) {
-        return {
-          [tree.fieldKey]: formConditionValue,
-        };
-      } else {
-        return formConditionValue;
-      }
+    if (constField && constField.path && "const" in constField) {
+      formConditionValue = {
+        ...transformInstillFormTreeToDefaultValue({
+          tree: tree.conditions[Object.keys(tree.conditions)[0]],
+        }),
+      };
+
+      dot.setter(
+        formConditionValue,
+        constField.path,
+        constField.const as string
+      );
+      return formConditionValue;
     }
 
-    const selectedConditionKey = selectedConditionMap[constField.path];
+    return formConditionValue;
+  }
 
-    formConditionValue = {
-      ...formConditionValue,
-      ...transformInstillFormTreeToDefaultValue({
-        tree: tree.conditions[selectedConditionKey],
-        selectedConditionMap,
-      }),
-    };
+  if (tree._type === "formGroup") {
+    let formGroupValue: Record<string, any> = {};
+
+    for (const property of tree.properties) {
+      formGroupValue = {
+        ...formGroupValue,
+        ...transformInstillFormTreeToDefaultValue({
+          tree: property,
+        }),
+      };
+    }
 
     if (tree.fieldKey) {
       return {
-        [tree.fieldKey]: formConditionValue,
+        [tree.fieldKey]: formGroupValue,
       };
-    } else {
-      return formConditionValue;
     }
+
+    return formGroupValue;
   }
 
   if (tree._type === "formArray") {
@@ -75,7 +63,6 @@ export function transformInstillFormTreeToDefaultValue({
         ...formArrayValue,
         ...transformInstillFormTreeToDefaultValue({
           tree: property,
-          selectedConditionMap,
         }),
       };
     }
@@ -84,9 +71,9 @@ export function transformInstillFormTreeToDefaultValue({
       return {
         [tree.fieldKey]: [formArrayValue],
       };
-    } else {
-      return [formArrayValue];
     }
+
+    return [formArrayValue];
   }
 
   let defaultValue: Nullable<string> = null;
