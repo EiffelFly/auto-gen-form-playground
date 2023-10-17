@@ -8,8 +8,12 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { pickFieldComponentFromInstillFormTree } from "./pickFieldComponentFromInstillFormTree";
+import { GeneralRecord } from "@instill-ai/toolkit";
 
-export function useInstillForm(schema: InstillJSONSchema | null) {
+export function useInstillForm(
+  schema: InstillJSONSchema | null,
+  data?: GeneralRecord
+) {
   const [selectedConditionMap, setSelectedConditionMap] =
     React.useState<SelectedConditionMap | null>(null);
 
@@ -25,20 +29,28 @@ export function useInstillForm(schema: InstillJSONSchema | null) {
     });
   }, [schema, selectedConditionMap]);
 
+  const formTree = React.useMemo(() => {
+    if (!schema) {
+      return null;
+    }
+
+    return transformInstillJSONSchemaToFormTree({
+      targetSchema: schema,
+      parentSchema: schema,
+    });
+  }, [schema]);
+
   const form = useForm<z.infer<typeof ValidatorSchema>>({
     resolver: zodResolver(ValidatorSchema),
     mode: "onSubmit",
     reValidateMode: "onSubmit",
+    defaultValues: data,
   });
 
-  const { fields, formTree } = React.useMemo(() => {
-    if (!schema) {
+  const { fields } = React.useMemo(() => {
+    if (!schema || !formTree) {
       return { fields: null, formTree: null };
     }
-    const formTree = transformInstillJSONSchemaToFormTree({
-      targetSchema: schema,
-      parentSchema: schema,
-    });
 
     return {
       fields: pickFieldComponentFromInstillFormTree({
@@ -49,7 +61,7 @@ export function useInstillForm(schema: InstillJSONSchema | null) {
       }),
       formTree,
     };
-  }, [schema, selectedConditionMap]);
+  }, [schema, selectedConditionMap, formTree]);
 
   return {
     form,

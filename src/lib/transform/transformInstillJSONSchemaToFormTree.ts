@@ -1,5 +1,6 @@
 import { retriveConstInfo } from "../retrieveConstInfo";
 import {
+  InstillFormGroupItem,
   InstillFormTree,
   InstillJSONSchema,
   InstillJSONSchemaDefinition,
@@ -71,6 +72,7 @@ export function transformInstillJSONSchemaToFormTree({
       path: (path || key) ?? null,
       conditions,
       isRequired,
+      jsonSchema: targetSchema,
     };
   }
 
@@ -80,18 +82,20 @@ export function transformInstillJSONSchemaToFormTree({
     !Array.isArray(targetSchema.items) &&
     targetSchema.items.type === "object"
   ) {
+    const propertyFormTree = transformInstillJSONSchemaToFormTree({
+      targetSchema: targetSchema.items,
+      parentSchema: targetSchema,
+      key,
+      path,
+    }) as InstillFormGroupItem;
+
     return {
       ...pickBaseFields(targetSchema),
+      ...propertyFormTree,
       _type: "formArray",
       fieldKey: key ?? null,
       path: (path || key) ?? null,
       isRequired,
-      properties: transformInstillJSONSchemaToFormTree({
-        targetSchema: targetSchema.items,
-        parentSchema: targetSchema,
-        key,
-        path,
-      }),
     };
   }
 

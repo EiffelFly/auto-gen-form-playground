@@ -77,11 +77,13 @@ export type InstillFormGroupItem = {
 export type InstillFormConditionItem = {
   _type: "formCondition";
   conditions: Record<string, InstillFormGroupItem>;
+  jsonSchema: InstillJSONSchema;
 } & InstillFormBaseFields;
 
 export type InstillArrayItem = {
   _type: "formArray";
-  properties: InstillFormTree;
+  properties: InstillFormTree[];
+  jsonSchema: InstillJSONSchema;
 } & InstillFormBaseFields;
 
 export type InstillFormTree =
