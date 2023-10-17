@@ -20,7 +20,10 @@ export const SingleSelectField = (props: {
           <Form.Item>
             <Form.Label>{title}</Form.Label>
             <Select.Root
-              onValueChange={field.onChange}
+              onValueChange={(e) => {
+                field.onChange(e);
+                form.trigger(path, { shouldFocus: true });
+              }}
               value={field.value ?? undefined}
             >
               <Form.Control>

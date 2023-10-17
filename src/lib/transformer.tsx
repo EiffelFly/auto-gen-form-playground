@@ -77,10 +77,9 @@ export const transformInstillJSONSchemaToZod = ({
   propertyPath?: string;
   forceOptional?: boolean;
 }): instillZodSchema => {
-  // const field will be ignored
-
   let instillZodSchema: z.ZodTypeAny = z.any();
 
+  // const field will only be used in oneOf field conditions
   if (targetSchema.const) {
     instillZodSchema = z.literal(targetSchema.const as string);
     return instillZodSchema;
@@ -991,6 +990,8 @@ export function useInstillForm(schema: InstillJSONSchema | null) {
 
   const form = useForm<z.infer<typeof ValidatorSchema>>({
     resolver: zodResolver(ValidatorSchema),
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
   });
 
   const { fields, formTree } = React.useMemo(() => {

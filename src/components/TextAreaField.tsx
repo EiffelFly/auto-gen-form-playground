@@ -21,6 +21,10 @@ export const TextAreaField = (props: {
                 {...field}
                 value={field.value ?? ""}
                 autoComplete="off"
+                onChange={(e) => {
+                  field.onChange(e);
+                  form.trigger(path, { shouldFocus: true });
+                }}
               />
             </Form.Control>
             <Form.Message />

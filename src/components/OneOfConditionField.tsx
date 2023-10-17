@@ -1,5 +1,5 @@
 import { SelectedConditionMap } from "@/lib/transformer";
-import { Form, Select } from "@instill-ai/design-system";
+import { Form, Select, useFormField } from "@instill-ai/design-system";
 import { GeneralUseFormReturn } from "@instill-ai/toolkit";
 import * as React from "react";
 
@@ -24,7 +24,12 @@ export const OneOfConditionField = ({
     return Object.entries(conditionComponents).map(([k, v]) => k);
   }, [conditionComponents]);
 
-  console.log(path);
+  const fieldValues = form.getValues(path);
+
+  // React.useEffect(() => {
+  //   form.clearErrors();
+  //   form.trigger();
+  // }, [selectedConditionMap, fieldValues]);
 
   return (
     <div key={path} className="flex flex-col">

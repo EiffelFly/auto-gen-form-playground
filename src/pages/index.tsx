@@ -15,7 +15,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-1 min-h-screen min-w-[100vh] flex-col">
-      <div className="flex m-auto flex-row gap-x-10 w-full max-w-[1200px]">
+      <div className="flex m-auto flex-row gap-x-10 w-full max-w-[1200px] p-10">
         <div className="flex flex-col gap-y-5 w-1/2">
           <div className="flex flex-col h-1/3 w-full">
             <MonacoEditor
@@ -75,7 +75,7 @@ export default function Home() {
             />
           </div>
         </div>
-        <div className="flex flex-col h-full max-h-screen w-1/2 overflow-y-scroll p-4">
+        <div className="flex flex-col h-full w-1/2 p-4">
           <Form.Root {...form}>
             <form className="w-full">
               <div className="flex flex-col gap-y-5 mb-5">{fields}</div>

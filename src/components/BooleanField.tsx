@@ -18,7 +18,13 @@ export const BooleanField = (props: {
           <Form.Item>
             <Form.Label>{title}</Form.Label>
             <Form.Control>
-              <Switch checked={field.value} onCheckedChange={field.onChange} />
+              <Switch
+                checked={field.value}
+                onCheckedChange={(e) => {
+                  field.onChange(e);
+                  form.trigger(path, { shouldFocus: true });
+                }}
+              />
             </Form.Control>
             <Form.Message />
             <Form.Description>{description}</Form.Description>

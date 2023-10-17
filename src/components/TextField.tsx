@@ -24,6 +24,10 @@ export const TextField = (props: {
                   type="text"
                   value={field.value ?? ""}
                   autoComplete="off"
+                  onChange={(e) => {
+                    field.onChange(e);
+                    form.trigger(path, { shouldFocus: true });
+                  }}
                 />
               </Input.Root>
             </Form.Control>
