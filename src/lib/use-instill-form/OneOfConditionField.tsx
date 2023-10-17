@@ -1,4 +1,4 @@
-import { SelectedConditionMap } from "@/lib/transformer";
+import { SelectedConditionMap } from "@/lib/type";
 import { Form, Select, useFormField } from "@instill-ai/design-system";
 import { GeneralUseFormReturn } from "@instill-ai/toolkit";
 import * as React from "react";

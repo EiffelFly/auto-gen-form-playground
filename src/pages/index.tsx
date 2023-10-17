@@ -1,8 +1,10 @@
 import * as React from "react";
 import * as z from "zod";
 import { Button, Form, Textarea } from "@instill-ai/design-system";
-import { InstillJSONSchema, useInstillForm } from "@/lib/transformer";
+import { InstillJSONSchema } from "@/lib/type";
+
 import MonacoEditor from "@monaco-editor/react";
+import { useInstillForm } from "@/lib/use-instill-form";
 
 export default function Home() {
   const [code, setCode] = React.useState<string | null>(null);

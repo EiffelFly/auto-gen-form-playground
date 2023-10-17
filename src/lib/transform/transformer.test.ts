@@ -1,10 +1,9 @@
 import { test, expect } from "vitest";
+import { InstillFormTree, InstillJSONSchema } from "../type";
 import {
-  InstillFormTree,
-  InstillJSONSchema,
   transformInstillJSONSchemaToFormTree,
   transformInstillJSONSchemaToZod,
-} from "./transformer";
+} from ".";
 
 test("should transform basic json schema to zod schema", () => {
   const schema: InstillJSONSchema = {
