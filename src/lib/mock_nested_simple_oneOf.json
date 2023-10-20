@@ -7,6 +7,31 @@
           "properties": {
             "model": {
               "type":"string"
+            },
+            "foo": {
+              "title": "Foo",
+              "oneOf": [
+                {
+                  "properties": {
+                    "bar_1": {
+                      "type": "string"
+                    },
+                    "foo-condition":{
+                      "const": "hello"
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "bar_2": {
+                      "type": "number"
+                    },
+                    "foo-condition":{
+                      "const": "world"
+                    }
+                  }
+                }
+              ]
             }
           }, 
           "type": "object"
