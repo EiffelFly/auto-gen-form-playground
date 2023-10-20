@@ -36,6 +36,7 @@ export function useInstillForm(
     defaultValues: data,
   });
 
+  // The first render will come to here
   React.useEffect(() => {
     if (!schema) return;
 
@@ -51,7 +52,30 @@ export function useInstillForm(
         tree: _formTree,
       });
 
-    setSelectedConditionMap(_selectedConditionMap);
+    const _ValidatorSchema = transformInstillJSONSchemaToZod({
+      parentSchema: schema,
+      targetSchema: schema,
+      selectedConditionMap: _selectedConditionMap,
+    });
+
+    setValidatorSchema(_ValidatorSchema);
+
+    let _data = {};
+
+    transformInstillFormTreeToDefaultValue({
+      tree: _formTree,
+      data: _data,
+    });
+
+    const _defaultValues = data ? data : _data;
+
+    console.log(_defaultValues);
+
+    form.reset(_defaultValues);
+  }, [schema]);
+
+  React.useEffect(() => {
+    if (!schema || !selectedConditionMap) return;
 
     const _ValidatorSchema = transformInstillJSONSchemaToZod({
       parentSchema: schema,
@@ -60,15 +84,7 @@ export function useInstillForm(
     });
 
     setValidatorSchema(_ValidatorSchema);
-
-    const _defaultValues = data
-      ? data
-      : transformInstillFormTreeToDefaultValue({
-          tree: _formTree,
-        });
-
-    form.reset(_defaultValues);
-  }, [schema]);
+  }, [schema, selectedConditionMap]);
 
   const { fields } = React.useMemo(() => {
     if (!schema || !formTree) {

@@ -56,34 +56,41 @@ export function pickFieldComponentFromInstillFormTree({
 
     // We will use the const path as the OneOfConditionField's path
 
-    const constPath = tree.conditions[
+    const constField = tree.conditions[
       Object.keys(tree.conditions)[0]
-    ].properties.find((e) => "const" in e)?.path;
+    ].properties.find((e) => "const" in e);
 
-    if (!constPath) {
+    if (!constField?.path) {
       return null;
     }
 
     return (
       <OneOfConditionField
         form={form}
-        path={constPath}
+        path={constField.path}
+        tree={tree}
         setSelectedConditionMap={setSelectedConditionMap}
-        key={constPath}
+        key={constField.path}
         conditionComponents={conditionComponents}
-        title={tree.title}
+        title={constField.fieldKey ?? undefined}
       />
     );
   }
 
   if (tree._type === "formArray") {
-    return pickFieldComponentFromInstillFormTree({
-      tree: tree.properties,
-      form,
-      selectedConditionMap,
-      setSelectedConditionMap,
-      disabledAll,
-    });
+    return (
+      <React.Fragment key={tree.path || tree.fieldKey}>
+        {tree.properties.map((property) => {
+          return pickFieldComponentFromInstillFormTree({
+            form,
+            tree: property,
+            selectedConditionMap,
+            setSelectedConditionMap,
+            disabledAll,
+          });
+        })}
+      </React.Fragment>
+    );
   }
 
   if (tree.const || !tree.path) {
