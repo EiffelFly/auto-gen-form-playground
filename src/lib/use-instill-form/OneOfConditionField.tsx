@@ -1,18 +1,21 @@
-import { SelectedConditionMap } from "@/lib/type";
-import { Form, Select, useFormField } from "@instill-ai/design-system";
+import { InstillFormTree, SelectedConditionMap } from "@/lib/type";
+import { Form, Select } from "@instill-ai/design-system";
 import { GeneralUseFormReturn } from "@instill-ai/toolkit";
 import * as React from "react";
+import { recursivelyResetFormData } from "../transform";
 
 export const OneOfConditionField = ({
   form,
   path,
   title,
+  tree,
   description,
   conditionComponents,
   setSelectedConditionMap,
 }: {
   form: GeneralUseFormReturn;
   path: string;
+  tree: InstillFormTree;
   setSelectedConditionMap: React.Dispatch<
     React.SetStateAction<SelectedConditionMap | null>
   >;
@@ -23,13 +26,6 @@ export const OneOfConditionField = ({
   const conditionOptions = React.useMemo(() => {
     return Object.entries(conditionComponents).map(([k, v]) => k);
   }, [conditionComponents]);
-
-  const fieldValues = form.getValues(path);
-
-  // React.useEffect(() => {
-  //   form.clearErrors();
-  //   form.trigger();
-  // }, [selectedConditionMap, fieldValues]);
 
   return (
     <div key={path} className="flex flex-col">
@@ -44,6 +40,17 @@ export const OneOfConditionField = ({
                 onValueChange={(event) => {
                   field.onChange(event);
                   setSelectedConditionMap((prev) => {
+                    // If the user change the condition, we will remove the
+                    // data of the previous condition
+
+                    let formValues = form.getValues();
+
+                    if (prev) {
+                      recursivelyResetFormData(tree, prev, formValues);
+                    }
+
+                    form.reset(formValues);
+
                     return {
                       ...prev,
                       [path]: event,
