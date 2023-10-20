@@ -3,83 +3,76 @@ import { InstillFormTree } from "../type";
 
 export function transformInstillFormTreeToDefaultValue({
   tree,
+  data,
+  isRoot,
 }: {
   tree: InstillFormTree;
-}): Nullable<GeneralRecord> {
+  data: GeneralRecord;
+
+  // This is only used for formArray
+  isRoot?: boolean;
+}) {
   // We don't need to set the field key for formCondition because in the
   // conditions are formGroup, we will set the fieldKey there
 
   if (tree._type === "formCondition") {
-    let formConditionValue: GeneralRecord = {};
-
     const constField = tree.conditions[
       Object.keys(tree.conditions)[0]
     ].properties.find((e) => "const" in e);
 
     if (constField && constField.path && "const" in constField) {
-      formConditionValue = {
-        ...transformInstillFormTreeToDefaultValue({
-          tree: tree.conditions[Object.keys(tree.conditions)[0]],
-        }),
-      };
+      transformInstillFormTreeToDefaultValue({
+        tree: tree.conditions[Object.keys(tree.conditions)[0]],
+        data,
+      });
 
-      dot.setter(
-        formConditionValue,
-        constField.path,
-        constField.const as string
-      );
-      return formConditionValue;
+      dot.setter(data, constField.path, constField.const as string);
     }
 
-    return formConditionValue;
+    return;
   }
 
   if (tree._type === "formGroup") {
     let formGroupValue: Record<string, any> = {};
 
     for (const property of tree.properties) {
-      formGroupValue = {
-        ...formGroupValue,
-        ...transformInstillFormTreeToDefaultValue({
-          tree: property,
-        }),
-      };
+      transformInstillFormTreeToDefaultValue({
+        tree: property,
+        data: formGroupValue,
+      });
     }
 
-    if (tree.fieldKey) {
-      return {
-        [tree.fieldKey]: formGroupValue,
-      };
+    for (const [key, value] of Object.entries(formGroupValue)) {
+      dot.setter(data, key, value);
     }
 
-    return formGroupValue;
+    return;
   }
 
   if (tree._type === "formArray") {
     let formArrayValue: Record<string, any> = {};
 
     for (const property of tree.properties) {
-      formArrayValue = {
-        ...formArrayValue,
-        ...transformInstillFormTreeToDefaultValue({
-          tree: property,
-        }),
-      };
+      transformInstillFormTreeToDefaultValue({
+        tree: property,
+        data: formArrayValue,
+        isRoot: true,
+      });
     }
 
-    if (tree.fieldKey) {
-      return {
-        [tree.fieldKey]: [formArrayValue],
-      };
+    if (tree.path) {
+      console.log(formArrayValue);
+      dot.setter(data, tree.path, [formArrayValue]);
     }
-
-    return [formArrayValue];
+    return;
   }
 
   let defaultValue: Nullable<string> = null;
 
-  if (!tree.fieldKey) {
-    return null;
+  const key = isRoot ? tree.fieldKey : tree.path;
+
+  if (!key) {
+    return;
   }
 
   if ("examples" in tree) {
@@ -99,9 +92,7 @@ export function transformInstillFormTreeToDefaultValue({
         defaultValue = null;
     }
 
-    return {
-      [tree.fieldKey]: defaultValue,
-    };
+    dot.setter(data, key, defaultValue);
   }
 
   if ("example" in tree) {
@@ -116,12 +107,9 @@ export function transformInstillFormTreeToDefaultValue({
         defaultValue = null;
     }
 
-    return {
-      [tree.fieldKey]: defaultValue,
-    };
+    dot.setter(data, key, defaultValue);
   }
 
-  return {
-    [tree.fieldKey]: defaultValue,
-  };
+  dot.setter(data, key, defaultValue);
+  return;
 }

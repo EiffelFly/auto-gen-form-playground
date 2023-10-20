@@ -23,16 +23,19 @@ test("should transform formItem with example", () => {
     ],
     _type: "formItem",
     fieldKey: "model",
-    path: "input.model",
+    path: "model",
     isRequired: true,
     type: "string",
   };
 
-  const defaultValue = transformInstillFormTreeToDefaultValue({
+  let data = {};
+
+  transformInstillFormTreeToDefaultValue({
     tree,
+    data,
   });
 
-  expect(defaultValue).toStrictEqual({
+  expect(data).toStrictEqual({
     model: "gpt-3.5-turbo",
   });
 });
@@ -58,16 +61,19 @@ test("should transform formItem with examples", () => {
     ],
     _type: "formItem",
     fieldKey: "model",
-    path: "input.model",
+    path: "model",
     isRequired: true,
     type: "string",
   };
 
-  const defaultValue = transformInstillFormTreeToDefaultValue({
+  let data = {};
+
+  transformInstillFormTreeToDefaultValue({
     tree,
+    data,
   });
 
-  expect(defaultValue).toStrictEqual({
+  expect(data).toStrictEqual({
     model: "gpt-3.5-turbo",
   });
 });
@@ -75,186 +81,68 @@ test("should transform formItem with examples", () => {
 test("should transform formGroup", () => {
   const tree: InstillFormTree = {
     _type: "formGroup",
-    fieldKey: "input",
-    path: "input",
-    isRequired: true,
+    fieldKey: null,
+    path: null,
+    isRequired: false,
     jsonSchema: {
       properties: {
-        max_tokens: {
-          type: "integer",
-          description:
-            "The maximum number of [tokens](/tokenizer) to generate in the chat completion.\n\nThe total length of input tokens and generated tokens is limited by the model's context length. [Example Python code](https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb) for counting tokens.\n",
-          instillFormat: "integer",
-          instillUpstreamTypes: ["value", "reference"],
-          title: "Max Tokens",
-        },
         model: {
           type: "string",
-          enum: [
-            "gpt-4",
-            "gpt-4-0314",
-            "gpt-4-0613",
-            "gpt-4-32k",
-            "gpt-4-32k-0314",
-            "gpt-4-32k-0613",
-            "gpt-3.5-turbo",
-            "gpt-3.5-turbo-16k",
-            "gpt-3.5-turbo-0301",
-            "gpt-3.5-turbo-0613",
-            "gpt-3.5-turbo-16k-0613",
-          ],
+          enum: ["text-embedding-ada-002"],
           description:
-            "ID of the model to use. See the [model endpoint compatibility](https://platform.openai.com/docs/models/model-endpoint-compatibility) table for details on which models work with the Chat API.",
-          example: "gpt-3.5-turbo",
+            "ID of the model to use. You can use the [List models](https://platform.openai.com/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](https://platform.openai.com/docs/models/overview) for descriptions of them.\n",
+          example: "text-embedding-ada-002",
           instillFormat: "text",
           instillUpstreamTypes: ["value", "reference"],
           title: "Model",
           "x-oaiTypeLabel": "string",
         },
-        n: {
-          default: 1,
-          example: 1,
-          instillUpstreamType: "value",
-          maximum: 128,
-          minimum: 1,
-          nullable: true,
-          type: "integer",
-          description:
-            "How many chat completion choices to generate for each input message.",
-          instillFormat: "integer",
-          instillUpstreamTypes: ["value", "reference"],
-          title: "N",
-        },
-        prompt: {
+        text: {
           type: "string",
           description: "",
           instillFormat: "text",
           instillUpstreamTypes: ["value", "reference"],
-          title: "Prompt",
-        },
-        system_message: {
-          maxLength: 2048,
-          type: "string",
-          default: "You are a helpful assistant.",
-          description:
-            'The system message helps set the behavior of the assistant. For example, you can modify the personality of the assistant or provide specific instructions about how it should behave throughout the conversation. By default, the model’s behavior is using a generic message as "You are a helpful assistant."',
-          instillFormat: "text",
-          instillUpstreamTypes: ["value", "reference"],
-          title: "System message",
-        },
-        temperature: {
-          default: 1,
-          example: 1,
-          instillUpstreamType: "value",
-          maximum: 2,
-          minimum: 0,
-          nullable: true,
-          type: "number",
-          description:
-            "What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.\n\nWe generally recommend altering this or `top_p` but not both.\n",
-          instillFormat: "number",
-          instillUpstreamTypes: ["value", "reference"],
-          title: "Temperature",
+          title: "Text",
         },
       },
-      required: ["model", "prompt"],
+      required: ["text", "model"],
       type: "object",
     },
     properties: [
       {
         description:
-          "The maximum number of [tokens](/tokenizer) to generate in the chat completion.\n\nThe total length of input tokens and generated tokens is limited by the model's context length. [Example Python code](https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb) for counting tokens.\n",
-        title: "Max Tokens",
-        _type: "formItem",
-        fieldKey: "max_tokens",
-        path: "input.max_tokens",
-        isRequired: false,
-        type: "integer",
-      },
-      {
-        description:
-          "ID of the model to use. See the [model endpoint compatibility](https://platform.openai.com/docs/models/model-endpoint-compatibility) table for details on which models work with the Chat API.",
-        example: "gpt-3.5-turbo",
+          "ID of the model to use. You can use the [List models](https://platform.openai.com/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](https://platform.openai.com/docs/models/overview) for descriptions of them.\n",
+        example: "text-embedding-ada-002",
         title: "Model",
-        enum: [
-          "gpt-4",
-          "gpt-4-0314",
-          "gpt-4-0613",
-          "gpt-4-32k",
-          "gpt-4-32k-0314",
-          "gpt-4-32k-0613",
-          "gpt-3.5-turbo",
-          "gpt-3.5-turbo-16k",
-          "gpt-3.5-turbo-0301",
-          "gpt-3.5-turbo-0613",
-          "gpt-3.5-turbo-16k-0613",
-        ],
+        enum: ["text-embedding-ada-002"],
         _type: "formItem",
         fieldKey: "model",
-        path: "input.model",
+        path: "model",
         isRequired: true,
         type: "string",
-      },
-      {
-        default: 1,
-        example: 1,
-        description:
-          "How many chat completion choices to generate for each input message.",
-        title: "N",
-        _type: "formItem",
-        fieldKey: "n",
-        path: "input.n",
-        isRequired: false,
-        type: "integer",
       },
       {
         description: "",
-        title: "Prompt",
+        title: "Text",
         _type: "formItem",
-        fieldKey: "prompt",
-        path: "input.prompt",
+        fieldKey: "text",
+        path: "text",
         isRequired: true,
         type: "string",
-      },
-      {
-        default: "You are a helpful assistant.",
-        description:
-          'The system message helps set the behavior of the assistant. For example, you can modify the personality of the assistant or provide specific instructions about how it should behave throughout the conversation. By default, the model’s behavior is using a generic message as "You are a helpful assistant."',
-        title: "System message",
-        _type: "formItem",
-        fieldKey: "system_message",
-        path: "input.system_message",
-        isRequired: false,
-        type: "string",
-      },
-      {
-        default: 1,
-        example: 1,
-        description:
-          "What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.\n\nWe generally recommend altering this or `top_p` but not both.\n",
-        title: "Temperature",
-        _type: "formItem",
-        fieldKey: "temperature",
-        path: "input.temperature",
-        isRequired: false,
-        type: "number",
       },
     ],
   };
 
-  const defaultValue = transformInstillFormTreeToDefaultValue({
+  let data = {};
+
+  transformInstillFormTreeToDefaultValue({
     tree,
+    data,
   });
 
-  expect(defaultValue).toStrictEqual({
-    input: {
-      max_tokens: null,
-      model: "gpt-3.5-turbo",
-      n: "1",
-      prompt: null,
-      system_message: null,
-      temperature: "1",
-    },
+  expect(data).toStrictEqual({
+    model: "text-embedding-ada-002",
+    text: null,
   });
 });
 
@@ -581,11 +469,14 @@ test("should transform formCondition", () => {
     },
   };
 
-  const defaultValue = transformInstillFormTreeToDefaultValue({
+  let data = {};
+
+  transformInstillFormTreeToDefaultValue({
     tree,
+    data,
   });
 
-  expect(defaultValue).toStrictEqual({
+  expect(data).toStrictEqual({
     input: { model: null },
     metadata: null,
     task: "TASK_TEXT_GENERATION",
@@ -1027,11 +918,14 @@ test("should transform nested formCondition", () => {
     },
   };
 
-  const defaultValue = transformInstillFormTreeToDefaultValue({
+  let data = {};
+
+  transformInstillFormTreeToDefaultValue({
     tree,
+    data,
   });
 
-  expect(defaultValue).toStrictEqual({
+  expect(data).toStrictEqual({
     input: { model: "MODEL_DAVINCI", prompt: null },
     metadata: null,
     task: "TASK_TEXT_GENERATION",
@@ -1086,9 +980,9 @@ test("should transform formArray", () => {
         jsonSchema: {
           properties: {
             port: {
+              type: "integer",
               description: "Port of the database.",
               examples: [5432],
-              type: "integer",
             },
           },
           type: "object",
@@ -1108,11 +1002,16 @@ test("should transform formArray", () => {
     ],
   };
 
-  const defaultValue = transformInstillFormTreeToDefaultValue({
+  let data = {};
+
+  transformInstillFormTreeToDefaultValue({
     tree,
+    data,
   });
 
-  expect(defaultValue).toStrictEqual({
+  console.log(data);
+
+  expect(data).toStrictEqual({
     host: "hello-world",
     ports: [{ port: "5432" }],
   });
