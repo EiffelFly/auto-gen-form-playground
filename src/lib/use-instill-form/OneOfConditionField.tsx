@@ -1,5 +1,5 @@
 import { InstillFormTree, SelectedConditionMap } from "@/lib/type";
-import { Form, Select } from "@instill-ai/design-system";
+import { Form, Icons, Select, Tooltip } from "@instill-ai/design-system";
 import { GeneralUseFormReturn } from "@instill-ai/toolkit";
 import * as React from "react";
 import { recursivelyResetFormData } from "../transform";
@@ -9,9 +9,10 @@ export const OneOfConditionField = ({
   path,
   title,
   tree,
-  description,
   conditionComponents,
   setSelectedConditionMap,
+  description,
+  additionalDescription,
 }: {
   form: GeneralUseFormReturn;
   path: string;
@@ -21,6 +22,7 @@ export const OneOfConditionField = ({
   >;
   conditionComponents: Record<string, React.ReactNode>;
   description?: string;
+  additionalDescription?: string;
   title?: string;
 }) => {
   const conditionOptions = React.useMemo(() => {
@@ -35,7 +37,37 @@ export const OneOfConditionField = ({
         render={({ field }) => {
           return (
             <Form.Item>
-              <Form.Label>{title}</Form.Label>
+              <div className="flex flex-row gap-x-2">
+                <Form.Label>{title}</Form.Label>
+                {additionalDescription ? (
+                  <Tooltip.Provider>
+                    <Tooltip.Root>
+                      <Tooltip.Trigger asChild>
+                        <Icons.HelpCircle className="w-[14px] my-auto cursor-pointer h-[14px] stroke-semantic-fg-secondary" />
+                      </Tooltip.Trigger>
+                      <Tooltip.Portal>
+                        <Tooltip.Content
+                          className="w-[360px]"
+                          sideOffset={5}
+                          side="top"
+                        >
+                          <div className="!px-3 !py-2 !rounded-sm !bg-semantic-bg-primary">
+                            <p className="product-body-text-4-semibold break-all text-semantic-fg-primary">
+                              {additionalDescription}
+                            </p>
+                          </div>
+                          <Tooltip.Arrow
+                            className="fill-white"
+                            offset={5}
+                            width={9}
+                            height={6}
+                          />
+                        </Tooltip.Content>
+                      </Tooltip.Portal>
+                    </Tooltip.Root>
+                  </Tooltip.Provider>
+                ) : null}
+              </div>
               <Select.Root
                 onValueChange={(event) => {
                   field.onChange(event);

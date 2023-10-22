@@ -1,4 +1,4 @@
-import { Form, Switch } from "@instill-ai/design-system";
+import { Form, Icons, Switch, Tooltip } from "@instill-ai/design-system";
 import { GeneralUseFormReturn } from "@instill-ai/toolkit";
 
 export const BooleanField = (props: {
@@ -6,8 +6,9 @@ export const BooleanField = (props: {
   path: string;
   title: null | string;
   description?: string;
+  additionalDescription?: string;
 }) => {
-  const { form, path, title, description } = props;
+  const { form, path, title, description, additionalDescription } = props;
   return (
     <Form.Field
       key={path}
@@ -16,7 +17,37 @@ export const BooleanField = (props: {
       render={({ field }) => {
         return (
           <Form.Item>
-            <Form.Label>{title}</Form.Label>
+            <div className="flex flex-row gap-x-2">
+              <Form.Label>{title}</Form.Label>
+              {additionalDescription ? (
+                <Tooltip.Provider>
+                  <Tooltip.Root>
+                    <Tooltip.Trigger asChild>
+                      <Icons.HelpCircle className="w-[14px] my-auto cursor-pointer h-[14px] stroke-semantic-fg-secondary" />
+                    </Tooltip.Trigger>
+                    <Tooltip.Portal>
+                      <Tooltip.Content
+                        className="w-[360px]"
+                        sideOffset={5}
+                        side="top"
+                      >
+                        <div className="!px-3 !py-2 !rounded-sm !bg-semantic-bg-primary">
+                          <p className="product-body-text-4-semibold break-all text-semantic-fg-primary">
+                            {additionalDescription}
+                          </p>
+                        </div>
+                        <Tooltip.Arrow
+                          className="fill-white"
+                          offset={5}
+                          width={9}
+                          height={6}
+                        />
+                      </Tooltip.Content>
+                    </Tooltip.Portal>
+                  </Tooltip.Root>
+                </Tooltip.Provider>
+              ) : null}
+            </div>
             <Form.Control>
               <Switch
                 checked={field.value}

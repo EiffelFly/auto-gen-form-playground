@@ -139,6 +139,7 @@ const baseFields: Array<keyof InstillJSONSchema> = [
   "example",
   "examples",
   "description",
+  "additionalDescription",
   "pattern",
   "const",
   "title",
