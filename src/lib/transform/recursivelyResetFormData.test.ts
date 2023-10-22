@@ -773,6 +773,4 @@ test("should reset nested oneOf form data", () => {
     selectedConditionMap,
     data
   );
-
-  console.log(data);
 });

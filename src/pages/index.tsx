@@ -5,6 +5,7 @@ import { InstillJSONSchema } from "@/lib/type";
 
 import MonacoEditor from "@monaco-editor/react";
 import { useInstillForm } from "@/lib/use-instill-form";
+import { GeneralRecord } from "@instill-ai/toolkit";
 
 export default function Home() {
   const [code, setCode] = React.useState<string | null>(null);
@@ -13,7 +14,10 @@ export default function Home() {
   const [data, setData] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
-  const { form, fields, ValidatorSchema, formTree } = useInstillForm(schema);
+  const { form, fields, ValidatorSchema, formTree } = useInstillForm(
+    schema,
+    null
+  );
 
   return (
     <div className="flex flex-1 min-h-screen min-w-[100vh] flex-col">

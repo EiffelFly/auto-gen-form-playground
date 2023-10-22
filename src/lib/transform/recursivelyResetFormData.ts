@@ -26,9 +26,6 @@ export function recursivelyResetFormData(
 
       if (constField && constField.path) {
         const selectedCondition = resetSelectedConditionMap[constField.path];
-
-        console.log(selectedCondition);
-
         if (selectedCondition) {
           recursivelyResetFormData(
             resetTree.conditions[selectedCondition],

@@ -61,7 +61,6 @@ export function transformInstillFormTreeToDefaultValue({
     }
 
     if (tree.path) {
-      console.log(formArrayValue);
       dot.setter(data, tree.path, [formArrayValue]);
     }
     return;

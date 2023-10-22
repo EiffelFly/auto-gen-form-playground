@@ -1,10 +1,6 @@
 import * as React from "react";
 import * as z from "zod";
-import {
-  InstillFormTree,
-  InstillJSONSchema,
-  SelectedConditionMap,
-} from "../type";
+import { InstillFormTree, InstillJSONSchema } from "../type";
 import {
   transformInstillJSONSchemaToFormTree,
   transformInstillJSONSchemaToZod,
@@ -15,15 +11,16 @@ import { pickFieldComponentFromInstillFormTree } from "./pickFieldComponentFromI
 import { GeneralRecord } from "@instill-ai/toolkit";
 import { transformInstillFormTreeToInitialSelectedCondition } from "../transform/transformInstillFormTreeToInitialSelectedCondition";
 import { transformInstillFormTreeToDefaultValue } from "../transform/transformInstillFormTreeToDefaultValue";
+import { useInstillSelectedConditionMap } from "./useInstillSelectedConditionMap";
 
 export function useInstillForm(
   schema: InstillJSONSchema | null,
-  data?: GeneralRecord
+  data: GeneralRecord | null
 ) {
-  const [selectedConditionMap, setSelectedConditionMap] =
-    React.useState<SelectedConditionMap | null>(null);
-
   const [formTree, setFormTree] = React.useState<InstillFormTree | null>(null);
+
+  const [selectedConditionMap, setSelectedConditionMap] =
+    useInstillSelectedConditionMap(formTree, data);
 
   const [ValidatorSchema, setValidatorSchema] = React.useState<z.ZodTypeAny>(
     z.any()
@@ -68,8 +65,6 @@ export function useInstillForm(
     });
 
     const _defaultValues = data ? data : _data;
-
-    console.log(_defaultValues);
 
     form.reset(_defaultValues);
   }, [schema]);

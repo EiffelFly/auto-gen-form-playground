@@ -1009,8 +1009,6 @@ test("should transform formArray", () => {
     data,
   });
 
-  console.log(data);
-
   expect(data).toStrictEqual({
     host: "hello-world",
     ports: [{ port: "5432" }],
