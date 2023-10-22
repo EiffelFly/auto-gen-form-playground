@@ -13,6 +13,7 @@ type InstillJsonSchemaProps = {
   instillUpstreamType?: string;
   instillUpstreamTypes?: string[];
   instillFormat?: string;
+  instillEditOnNode?: boolean;
   additionalDescription?: string;
 };
 
@@ -62,6 +63,7 @@ type InstillFormBaseFields = {
   description?: string;
   isMultiline?: boolean;
   additionalDescription?: string;
+  instillEditOnNode?: boolean;
 };
 
 export type InstillFormItem = {
