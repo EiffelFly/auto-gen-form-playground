@@ -37,6 +37,7 @@
                 "value",
                 "reference"
               ],
+              "instillEditOnNode": true,
               "title": "Model",
               "x-oaiTypeLabel": "string"
             },
@@ -64,6 +65,7 @@
                 "value",
                 "reference"
               ],
+              "instillEditOnNode": true,
               "title": "Prompt"
             },
             "system_message": {
@@ -106,7 +108,8 @@
           "type": "object"
         },
         "task": {
-          "const": "TASK_TEXT_GENERATION"
+          "const": "TASK_TEXT_GENERATION",
+          "instillEditOnNode": true
         }
       },
       "type": "object",
@@ -127,6 +130,7 @@
                 "value",
                 "reference"
               ],
+              "instillEditOnNode": true,
               "title": "Model",
               "x-oaiTypeLabel": "string"
             },
@@ -138,6 +142,7 @@
                 "value",
                 "reference"
               ],
+              "instillEditOnNode": true,
               "title": "Text"
             }
           },
@@ -152,7 +157,8 @@
           "type": "object"
         },
         "task": {
-          "const": "TASK_TEXT_EMBEDDINGS"
+          "const": "TASK_TEXT_EMBEDDINGS",
+          "instillEditOnNode": true
         }
       },
       "type": "object",
@@ -169,6 +175,7 @@
               "instillUpstreamTypes": [
                 "reference"
               ],
+              "instillEditOnNode": true,
               "title": "Audio"
             },
             "language": {
@@ -204,6 +211,7 @@
                 "value",
                 "reference"
               ],
+              "instillEditOnNode": true,
               "title": "Prompt"
             },
             "temperature": {
@@ -228,7 +236,8 @@
           "type": "object"
         },
         "task": {
-          "const": "TASK_SPEECH_RECOGNITION"
+          "const": "TASK_SPEECH_RECOGNITION",
+          "instillEditOnNode": true
         }
       },
       "type": "object",

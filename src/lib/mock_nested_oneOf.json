@@ -8,22 +8,30 @@
             {
               "properties": {
                 "model": {
-                  "const": "MODEL_DAVINCI"
+                  "const": "MODEL_DAVINCI",
+                  "instillEditOnNode": true
                 },
                 "prompt": {
                   "type": "string"
                 }
-              }
+              },
+              "required": [
+                "prompt", "model"
+              ]
             },
             {
               "properties": {
                 "model": {
-                  "const": "MODEL_GPT4"
+                  "const": "MODEL_GPT4",
+                  "instillEditOnNode": true
                 },
                 "system_message": {
                   "type": "string"
                 }
-              }
+              },
+              "required": [
+                "system_message", "model"
+              ]
             }
           ],
           "type": "object"
@@ -33,7 +41,8 @@
           "type": "object"
         },
         "task": {
-          "const": "TASK_TEXT_GENERATION"
+          "const": "TASK_TEXT_GENERATION",
+          "instillEditOnNode": true
         }
       },
       "type": "object",
@@ -64,7 +73,8 @@
           "type": "object"
         },
         "task": {
-          "const": "TASK_TEXT_EMBEDDINGS"
+          "const": "TASK_TEXT_EMBEDDINGS",
+          "instillEditOnNode": true
         }
       },
       "type": "object",
@@ -94,7 +104,8 @@
           "type": "object"
         },
         "task": {
-          "const": "TASK_SPEECH_RECOGNITION"
+          "const": "TASK_SPEECH_RECOGNITION",
+          "instillEditOnNode": true
         }
       },
       "type": "object",
