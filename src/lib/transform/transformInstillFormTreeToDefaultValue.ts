@@ -74,6 +74,11 @@ export function transformInstillFormTreeToDefaultValue({
     return;
   }
 
+  if (tree.type === "boolean") {
+    dot.setter(data, key, false);
+    return;
+  }
+
   if ("examples" in tree) {
     switch (typeof tree.examples) {
       case "object":
@@ -92,6 +97,7 @@ export function transformInstillFormTreeToDefaultValue({
     }
 
     dot.setter(data, key, defaultValue);
+    return;
   }
 
   if ("example" in tree) {
@@ -107,6 +113,7 @@ export function transformInstillFormTreeToDefaultValue({
     }
 
     dot.setter(data, key, defaultValue);
+    return;
   }
 
   dot.setter(data, key, defaultValue);

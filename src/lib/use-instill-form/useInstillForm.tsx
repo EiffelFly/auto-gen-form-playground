@@ -13,10 +13,17 @@ import { transformInstillFormTreeToInitialSelectedCondition } from "../transform
 import { transformInstillFormTreeToDefaultValue } from "../transform/transformInstillFormTreeToDefaultValue";
 import { useInstillSelectedConditionMap } from "./useInstillSelectedConditionMap";
 
-export function useInstillForm(
-  schema: InstillJSONSchema | null,
-  data: GeneralRecord | null
-) {
+export function useInstillForm({
+  schema,
+  data,
+  checkIsHiddenByFormTree,
+  checkIsHiddenBySchema,
+}: {
+  schema: InstillJSONSchema | null;
+  data: GeneralRecord | null;
+  checkIsHiddenByFormTree?: (tree: InstillFormTree) => boolean;
+  checkIsHiddenBySchema?: (schema: InstillJSONSchema) => boolean;
+}) {
   const [formTree, setFormTree] = React.useState<InstillFormTree | null>(null);
 
   const [selectedConditionMap, setSelectedConditionMap] =
@@ -53,6 +60,7 @@ export function useInstillForm(
       parentSchema: schema,
       targetSchema: schema,
       selectedConditionMap: _selectedConditionMap,
+      checkIsHiddenBySchema,
     });
 
     setValidatorSchema(_ValidatorSchema);
@@ -92,6 +100,7 @@ export function useInstillForm(
         tree: formTree,
         selectedConditionMap,
         setSelectedConditionMap,
+        checkIsHiddenByFormTree,
       }),
       formTree,
     };

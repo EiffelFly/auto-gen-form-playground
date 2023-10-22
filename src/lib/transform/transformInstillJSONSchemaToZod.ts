@@ -13,6 +13,7 @@ export function transformInstillJSONSchemaToZod({
   propertyKey,
   propertyPath,
   forceOptional,
+  checkIsHiddenBySchema,
 }: {
   parentSchema: InstillJSONSchema;
   targetSchema: InstillJSONSchema;
@@ -20,12 +21,22 @@ export function transformInstillJSONSchemaToZod({
   propertyKey?: string;
   propertyPath?: string;
   forceOptional?: boolean;
+  checkIsHiddenBySchema?: (schema: InstillJSONSchema) => boolean;
 }): instillZodSchema {
   let instillZodSchema: z.ZodTypeAny = z.any();
+
+  let isHidden = checkIsHiddenBySchema
+    ? checkIsHiddenBySchema(targetSchema)
+    : false;
 
   // const field will only be used in oneOf field conditions
   if (targetSchema.const) {
     instillZodSchema = z.literal(targetSchema.const as string);
+
+    if (isHidden) {
+      instillZodSchema = instillZodSchema.nullable().optional();
+    }
+
     return instillZodSchema;
   }
 
@@ -62,7 +73,12 @@ export function transformInstillJSONSchemaToZod({
         selectedConditionMap,
         propertyKey,
         propertyPath,
+        checkIsHiddenBySchema,
       });
+    }
+
+    if (isHidden) {
+      instillZodSchema = instillZodSchema.nullable().optional();
     }
 
     return instillZodSchema;
@@ -96,6 +112,7 @@ export function transformInstillJSONSchemaToZod({
                     ? `${propertyPath}.${entryKey}`
                     : entryKey,
                   selectedConditionMap,
+                  checkIsHiddenBySchema,
                 }),
               });
             }
@@ -106,6 +123,7 @@ export function transformInstillJSONSchemaToZod({
             parentSchema,
             targetSchema: condition,
             selectedConditionMap,
+            checkIsHiddenBySchema,
           });
 
           anyOfSchemaArray.push(anyOfSchema);
@@ -118,8 +136,8 @@ export function transformInstillJSONSchemaToZod({
       anyOfSchemaArray as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]
     );
 
-    if (!isRequired || forceOptional) {
-      instillZodSchema = instillZodSchema.optional();
+    if (!isRequired || forceOptional || isHidden) {
+      instillZodSchema = instillZodSchema.nullable().optional();
     }
 
     return instillZodSchema;
@@ -141,10 +159,8 @@ export function transformInstillJSONSchemaToZod({
         parentSchema.required.includes(propertyKey)
       : false;
 
-    // console.log(propertyKey, parentSchema, isRequired);
-
-    if (!isRequired) {
-      instillZodSchema = instillZodSchema.optional();
+    if (!isRequired || forceOptional || isHidden) {
+      instillZodSchema = instillZodSchema.nullable().optional();
     }
 
     return instillZodSchema;
@@ -162,6 +178,7 @@ export function transformInstillJSONSchemaToZod({
             parentSchema,
             targetSchema: targetSchema.items as InstillJSONSchema,
             selectedConditionMap,
+            checkIsHiddenBySchema,
           })
         );
 
@@ -187,6 +204,7 @@ export function transformInstillJSONSchemaToZod({
                 ? `${propertyPath}.${entryKey}`
                 : entryKey,
               selectedConditionMap,
+              checkIsHiddenBySchema,
             }),
           });
         }
@@ -197,7 +215,9 @@ export function transformInstillJSONSchemaToZod({
       break;
     }
     case "string": {
-      instillZodSchema = z.string();
+      instillZodSchema = z.string({
+        errorMap: customErrorMap,
+      });
       break;
     }
     case "boolean": {
@@ -222,9 +242,25 @@ export function transformInstillJSONSchemaToZod({
       parentSchema.required.includes(propertyKey)
     : false;
 
-  if (!isRequired || forceOptional) {
-    instillZodSchema = instillZodSchema.optional();
+  if (!isRequired || forceOptional || isHidden) {
+    instillZodSchema = instillZodSchema.nullable().optional();
   }
 
   return instillZodSchema;
 }
+
+const customErrorMap: z.ZodErrorMap = (error, ctx) => {
+  /*
+  This is where you override the various error codes
+  */
+  switch (error.code) {
+    case z.ZodIssueCode.invalid_type:
+      if (error.expected === "string" && ctx.data === null) {
+        return { message: "This field is required" };
+      }
+      break;
+  }
+
+  // fall back to default message!
+  return { message: ctx.defaultError };
+};

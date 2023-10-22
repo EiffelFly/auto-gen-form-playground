@@ -12,7 +12,8 @@
                   "instillEditOnNode": true
                 },
                 "prompt": {
-                  "type": "string"
+                  "type": "string",
+                  "instillEditOnNode": true
                 }
               },
               "required": [
@@ -26,7 +27,8 @@
                   "instillEditOnNode": true
                 },
                 "system_message": {
-                  "type": "string"
+                  "type": "string",
+                  "instillEditOnNode": true
                 }
               },
               "required": [
@@ -60,7 +62,8 @@
                 "value",
                 "reference"
               ],
-              "title": "Text"
+              "title": "Text",
+              "instillEditOnNode": true
             }
           },
           "required": [
@@ -91,7 +94,8 @@
               "instillUpstreamTypes": [
                 "reference"
               ],
-              "title": "Audio"
+              "title": "Audio",
+              "instillEditOnNode": true
             }
           },
           "required": [

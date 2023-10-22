@@ -13,6 +13,7 @@ export function pickFieldComponentFromInstillFormTree({
   selectedConditionMap,
   setSelectedConditionMap,
   disabledAll,
+  checkIsHiddenByFormTree,
 }: {
   form: GeneralUseFormReturn;
   tree: InstillFormTree;
@@ -21,6 +22,7 @@ export function pickFieldComponentFromInstillFormTree({
     React.SetStateAction<SelectedConditionMap | null>
   >;
   disabledAll?: boolean;
+  checkIsHiddenByFormTree?: (tree: InstillFormTree) => boolean;
 }): React.ReactNode {
   if (tree._type === "formGroup") {
     return (
@@ -32,10 +34,15 @@ export function pickFieldComponentFromInstillFormTree({
             selectedConditionMap,
             setSelectedConditionMap,
             disabledAll,
+            checkIsHiddenByFormTree,
           });
         })}
       </React.Fragment>
     );
+  }
+
+  if (checkIsHiddenByFormTree && checkIsHiddenByFormTree(tree)) {
+    return null;
   }
 
   if (tree._type === "formCondition") {
@@ -49,6 +56,7 @@ export function pickFieldComponentFromInstillFormTree({
             selectedConditionMap,
             setSelectedConditionMap,
             disabledAll,
+            checkIsHiddenByFormTree,
           }),
         ];
       })
@@ -88,6 +96,7 @@ export function pickFieldComponentFromInstillFormTree({
             selectedConditionMap,
             setSelectedConditionMap,
             disabledAll,
+            checkIsHiddenByFormTree,
           });
         })}
       </React.Fragment>

@@ -65,7 +65,18 @@ export function transformInstillJSONSchemaToFormTree({
       })
     );
 
+    const constField = targetSchema.oneOf[0].properties
+      ? Object.entries(targetSchema.oneOf[0].properties).find(
+          ([key, property]) => "const" in property
+        )?.[1]
+      : undefined;
+
+    let constBaseFields = pickBaseFields(constField ?? {});
+
+    delete constBaseFields.const;
+
     return {
+      ...constBaseFields,
       ...pickBaseFields(targetSchema),
       _type: "formCondition",
       fieldKey: key ?? null,
@@ -117,7 +128,7 @@ export function transformInstillJSONSchemaToFormTree({
       path: (path || key) ?? null,
       isRequired,
       jsonSchema: targetSchema,
-      properties,
+      properties: properties ?? [],
     };
   }
 
@@ -143,6 +154,7 @@ const baseFields: Array<keyof InstillJSONSchema> = [
   "pattern",
   "const",
   "title",
+  "instillEditOnNode",
 ];
 
 function pickBaseFields(schema: InstillJSONSchema): Partial<InstillJSONSchema> {

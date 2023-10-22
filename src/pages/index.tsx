@@ -18,6 +18,10 @@ export default function Home() {
     schema,
     data: null,
     // checkIsHiddenByFormTree: (tree) => {
+    //   if (tree._type === "formCondition") {
+    //     return false;
+    //   }
+
     //   if (tree.instillEditOnNode) {
     //     return false;
     //   } else {
@@ -25,6 +29,10 @@ export default function Home() {
     //   }
     // },
     // checkIsHiddenBySchema: (schema) => {
+    //   if (schema.oneOf) {
+    //     return false;
+    //   }
+
     //   if (schema.instillEditOnNode) {
     //     return false;
     //   } else {
